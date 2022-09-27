@@ -2,6 +2,7 @@ package rbasamoyai.createbigcannons.munitions;
 
 import com.mojang.math.Constants;
 
+import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
@@ -18,6 +19,7 @@ import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.projectile.AbstractHurtingProjectile;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
@@ -130,7 +132,8 @@ public abstract class AbstractCannonProjectile extends AbstractHurtingProjectile
 				if (!remainingBlock.isAir()) {
 					this.setBreakthroughPower((byte) Math.max(0, this.getBreakthroughPower() - 9));
 					if (remainingBlock.getDestroySpeed(this.level, pos) != -1.0) {
-						remainingBlock.onBlockExploded(this.level, pos, explode);
+						this.level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+						remainingBlock.getBlock().wasExploded(this.level, pos, explode);
 					} else {
 						this.setBreakthroughPower((byte) 0);
 					}
@@ -183,12 +186,12 @@ public abstract class AbstractCannonProjectile extends AbstractHurtingProjectile
 		return this.entityData.get(BREAKTHROUGH_POWER);
 	}
 
-	public static void build(EntityType.Builder<? extends AbstractCannonProjectile> builder) {
-		builder.setTrackingRange(16)
-				.setUpdateInterval(1)
-				.setShouldReceiveVelocityUpdates(true)
+	public static void build(FabricEntityTypeBuilder<? extends AbstractCannonProjectile> builder) {
+		builder.trackRangeChunks(16)
+				.trackedUpdateRate(1)
+				.forceTrackedVelocityUpdates(true)
 				.fireImmune()
-				.sized(0.8f, 0.8f);
+				.dimensions(EntityDimensions.fixed(0.8f, 0.8f));
 	}
 	
 	@Override

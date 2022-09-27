@@ -1,22 +1,15 @@
 package rbasamoyai.createbigcannons.base;
 
-import java.util.function.Supplier;
-
+import net.fabricmc.fabric.api.event.registry.FabricRegistryBuilder;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
-import net.minecraftforge.registries.IForgeRegistry;
-import net.minecraftforge.registries.RegistryBuilder;
 import rbasamoyai.createbigcannons.CreateBigCannons;
 import rbasamoyai.createbigcannons.crafting.BlockRecipeSerializer;
 
 public class CBCRegistries {
 
-	public static final Supplier<IForgeRegistry<BlockRecipeSerializer<?>>> BLOCK_RECIPE_SERIALIZERS =
-			CreateBigCannons.registrate().makeRegistry("block_recipe_serializers", BlockRecipeSerializer.class, CBCRegistries::makeRegBlockRecipeSerializer);	
-	
-	private static RegistryBuilder<BlockRecipeSerializer<?>> makeRegBlockRecipeSerializer() {
-		return new RegistryBuilder<BlockRecipeSerializer<?>>().allowModification();
-	}
+	public static final Registry<BlockRecipeSerializer> BLOCK_RECIPE_SERIALIZERS =
+			FabricRegistryBuilder.createSimple(BlockRecipeSerializer.class, CreateBigCannons.resource("block_recipe_serializers")).buildAndRegister();
 	
 	public static class Keys {
 		public static final ResourceKey<Registry<BlockRecipeSerializer<?>>> BLOCK_RECIPE_SERIALIZERS = key("block_recipe_serializers");

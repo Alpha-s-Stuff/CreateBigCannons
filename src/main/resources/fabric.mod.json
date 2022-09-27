@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "id": "createbigcannons",
+  "version": "${version}",
+
+  "name": "Create Big Cannons",
+  "description": "Artillery engineering comes to Create",
+  "authors": [
+    "rbasamoyai",
+    "AlphaMode"
+  ],
+  "contact": {
+    "issues": "https://github.com/mrh0/createaddition/issues",
+    "sources": "https://github.com/mrh0/createaddition"
+  },
+
+  "license": "MIT",
+  "icon": "logo.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "rbasamoyai.createbigcannons.CreateBigCannons"
+    ],
+    "client": [
+      "rbasamoyai.createbigcannons.CreateBigCannonsClient"
+    ],
+    "jei_mod_plugin": [
+      "rbasamoyai.createbigcannons.compat.jei.CBCJEI"
+    ]
+  },
+
+  "depends": {
+    "fabricloader": ">=0.14.9",
+    "fabric": ">=0.58.0",
+    "minecraft": ">=1.18.2",
+    "registrate-fabric": "*",
+    "flywheel": "*"
+  }
+}

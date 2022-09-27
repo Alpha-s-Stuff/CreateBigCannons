@@ -7,6 +7,7 @@ import com.simibubi.create.content.contraptions.processing.ProcessingRecipeBuild
 import com.simibubi.create.foundation.data.recipe.ProcessingRecipeGen;
 import com.simibubi.create.foundation.utility.recipe.IRecipeTypeInfo;
 
+import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
@@ -17,7 +18,7 @@ import rbasamoyai.createbigcannons.CreateBigCannons;
 
 public class CBCMixingRecipeProvider extends ProcessingRecipeGen {
 
-	public CBCMixingRecipeProvider(DataGenerator gen) {
+	public CBCMixingRecipeProvider(FabricDataGenerator gen) {
 		super(gen);
 	}
 	

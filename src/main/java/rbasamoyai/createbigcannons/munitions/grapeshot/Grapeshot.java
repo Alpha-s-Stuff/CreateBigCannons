@@ -1,5 +1,6 @@
 package rbasamoyai.createbigcannons.munitions.grapeshot;
 
+import io.github.fabricators_of_create.porting_lib.mixin.common.accessor.DamageSourceAccessor;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
@@ -20,7 +21,7 @@ public class Grapeshot extends Shrapnel {
 		return CBCTags.BlockCBC.GRAPESHOT_SHATTERABLE;
 	}
 	
-	private static final DamageSource GRAPESHOT = new DamageSource(CreateBigCannons.MOD_ID + ".grapeshot");
+	private static final DamageSource GRAPESHOT = DamageSourceAccessor.port_lib$init(CreateBigCannons.MOD_ID + ".grapeshot");
 	@Override protected DamageSource getDamageSource() { return GRAPESHOT; }
 
 }

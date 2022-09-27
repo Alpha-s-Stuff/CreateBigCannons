@@ -2,6 +2,7 @@ package rbasamoyai.createbigcannons.crafting.casting;
 
 import com.simibubi.create.foundation.block.ITE;
 
+import net.fabricmc.fabric.api.block.BlockPickInteractionAware;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -19,7 +20,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import rbasamoyai.createbigcannons.CBCBlockEntities;
 import rbasamoyai.createbigcannons.CBCBlocks;
 
-public class CannonCastBlock extends Block implements ITE<CannonCastBlockEntity> {
+public class CannonCastBlock extends Block implements ITE<CannonCastBlockEntity>, BlockPickInteractionAware {
 	
 	public CannonCastBlock(Properties properties) {
 		super(properties);
@@ -33,7 +34,7 @@ public class CannonCastBlock extends Block implements ITE<CannonCastBlockEntity>
 	}
 	
 	@Override
-	public ItemStack getCloneItemStack(BlockState state, HitResult target, BlockGetter level, BlockPos pos, Player player) {
+	public ItemStack getPickedStack(BlockState state, BlockGetter level, BlockPos pos, Player player, HitResult target) {
 		return CBCBlocks.CASTING_SAND.asStack();
 	}
 	

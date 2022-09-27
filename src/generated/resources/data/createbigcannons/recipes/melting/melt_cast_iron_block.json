@@ -2,7 +2,7 @@
   "type": "createbigcannons:melting",
   "ingredients": [
     {
-      "tag": "forge:blocks/cast_iron"
+      "tag": "c:blocks/cast_iron"
     }
   ],
   "results": [

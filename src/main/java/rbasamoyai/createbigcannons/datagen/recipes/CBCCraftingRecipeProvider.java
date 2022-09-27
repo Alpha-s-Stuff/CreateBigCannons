@@ -6,6 +6,8 @@ import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.foundation.data.recipe.MechanicalCraftingRecipeBuilder;
 
+import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.recipes.FinishedRecipe;
 import net.minecraft.data.recipes.RecipeProvider;
@@ -18,14 +20,14 @@ import rbasamoyai.createbigcannons.CBCItems;
 import rbasamoyai.createbigcannons.CBCTags;
 import rbasamoyai.createbigcannons.CreateBigCannons;
 
-public class CBCCraftingRecipeProvider extends RecipeProvider {
+public class CBCCraftingRecipeProvider extends FabricRecipeProvider {
 
-	public CBCCraftingRecipeProvider(DataGenerator gen) {
+	public CBCCraftingRecipeProvider(FabricDataGenerator gen) {
 		super(gen);
 	}
 	
 	@Override
-	protected void buildCraftingRecipes(Consumer<FinishedRecipe> cons) {
+	protected void generateRecipes(Consumer<FinishedRecipe> cons) {
 		ShapedRecipeBuilder.shaped(CBCItems.IMPACT_FUZE.get())
 		.define('T', CBCTags.ItemCBC.IMPACT_FUZE_HEAD).define('R', Items.REDSTONE)
 		.pattern("T")

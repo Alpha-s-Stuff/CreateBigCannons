@@ -5,19 +5,16 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Supplier;
 
+import net.minecraftforge.api.ModLoadingContext;
+import net.minecraftforge.api.fml.event.config.ModConfigEvent;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.simibubi.create.foundation.config.ConfigBase;
 
 import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.config.ModConfigEvent;
 import rbasamoyai.createbigcannons.CreateBigCannons;
 
-@Mod.EventBusSubscriber(modid = CreateBigCannons.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class CBCConfigs {
 
 	/*
@@ -45,27 +42,28 @@ public class CBCConfigs {
 		return config;
 	}
 	
-	public static void registerConfigs(ModLoadingContext context) {
+	public static void registerConfigs() {
 		CLIENT = register(CBCCfgClient::new, ModConfig.Type.CLIENT);
 		COMMON = register(CBCCfgCommon::new, ModConfig.Type.COMMON);
 		SERVER = register(CBCCfgServer::new, ModConfig.Type.SERVER);
 		
 		for (Entry<ModConfig.Type, ConfigBase> pair : CONFIGS.entrySet())
-			context.registerConfig(pair.getKey(), pair.getValue().specification);
+			ModLoadingContext.registerConfig(CreateBigCannons.MOD_ID, pair.getKey(), pair.getValue().specification);
+
+		ModConfigEvent.LOADING.register(CBCConfigs::onLoad);
+		ModConfigEvent.RELOADING.register(CBCConfigs::onReload);
 	}
-	
-	@SubscribeEvent
-	public static void onLoad(ModConfigEvent.Loading event) {
+
+	public static void onLoad(ModConfig modConfig) {
 		for (ConfigBase config : CONFIGS.values())
-			if (config.specification == event.getConfig()
+			if (config.specification == modConfig
 				.getSpec())
 				config.onLoad();
 	}
 
-	@SubscribeEvent
-	public static void onReload(ModConfigEvent.Reloading event) {
+	public static void onReload(ModConfig modConfig) {
 		for (ConfigBase config : CONFIGS.values())
-			if (config.specification == event.getConfig()
+			if (config.specification == modConfig
 				.getSpec())
 				config.onReload();
 	}

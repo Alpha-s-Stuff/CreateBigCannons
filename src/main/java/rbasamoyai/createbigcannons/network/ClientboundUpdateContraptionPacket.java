@@ -1,20 +1,21 @@
 package rbasamoyai.createbigcannons.network;
 
-import java.util.function.Supplier;
-
 import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
-
+import io.github.fabricators_of_create.porting_lib.util.EnvExecutor;
+import me.pepperbell.simplenetworking.S2CPacket;
+import me.pepperbell.simplenetworking.SimpleChannel;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.fabric.api.networking.v1.PacketSender;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.network.NetworkEvent;
 
-public class ClientboundUpdateContraptionPacket {
+public class ClientboundUpdateContraptionPacket implements S2CPacket {
 
 	private final int id;
 	private final BlockPos pos;
@@ -50,12 +51,10 @@ public class ClientboundUpdateContraptionPacket {
 		}
 	}
 	
-	public void handle(Supplier<NetworkEvent.Context> sup) {
-		NetworkEvent.Context ctx = sup.get();
-		ctx.enqueueWork(() -> {
-			DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> CBCClientHandlers.updateContraption(this));
+	public void handle(Minecraft client, ClientPacketListener listener, PacketSender responseSender, SimpleChannel channel) {
+		client.execute(() -> {
+			EnvExecutor.runWhenOn(EnvType.CLIENT, () -> () -> CBCClientHandlers.updateContraption(this));
 		});
-		ctx.setPacketHandled(true);
 	}
 	
 }

@@ -7,12 +7,12 @@ import com.google.gson.JsonObject;
 import com.simibubi.create.AllTags;
 import com.simibubi.create.foundation.fluid.FluidIngredient;
 
+import net.minecraft.core.Registry;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraftforge.registries.ForgeRegistries;
 import rbasamoyai.createbigcannons.CBCBlocks;
 import rbasamoyai.createbigcannons.CBCFluids;
 import rbasamoyai.createbigcannons.CreateBigCannons;
@@ -251,7 +251,7 @@ public class CannonCastRecipeProvider extends BlockRecipeProvider {
 			obj.addProperty("cast_shape", this.shape.name().toString());
 			obj.add("fluid", this.ingredient.serialize());
 			obj.addProperty("casting_time", this.castingTime);
-			obj.addProperty("result", ForgeRegistries.BLOCKS.getKey(this.result).toString());
+			obj.addProperty("result", Registry.BLOCK.getKey(this.result).toString());
 		}
 
 		@Override public ResourceLocation getId() { return this.id; }

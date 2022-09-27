@@ -114,7 +114,7 @@ public class IncompleteScrewBreechBlock extends SolidCannonBlock<IncompleteCanno
 		if (this.resolvedSecondItem == null) {
 			this.resolvedSecondItem = this.secondItemSupplier.get();
 		}
-		return this.resolvedSecondItem.delegate.get();
+		return this.resolvedSecondItem;
 	}
 
 	@Override
@@ -130,7 +130,7 @@ public class IncompleteScrewBreechBlock extends SolidCannonBlock<IncompleteCanno
 	@Override
 	public BlockState getCompleteBlockState(BlockState state) {
 		if (this.result == null) this.result = this.resultSupplier.get();
-		BlockState newState = this.result.delegate.get().defaultBlockState();
+		BlockState newState = this.result.defaultBlockState();
 		return newState.hasProperty(FACING) ? newState = newState.setValue(FACING, state.getValue(FACING)) : newState;
 	}
 	

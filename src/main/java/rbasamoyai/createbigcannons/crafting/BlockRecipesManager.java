@@ -3,20 +3,24 @@ package rbasamoyai.createbigcannons.crafting;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import me.pepperbell.simplenetworking.S2CPacket;
+import me.pepperbell.simplenetworking.SimpleChannel;
+import net.fabricmc.fabric.api.networking.v1.PacketSender;
+import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.network.PacketDistributor;
+import rbasamoyai.createbigcannons.CreateBigCannons;
 import rbasamoyai.createbigcannons.base.CBCRegistries;
 import rbasamoyai.createbigcannons.network.CBCNetwork;
 
@@ -43,7 +47,7 @@ public class BlockRecipesManager {
 	@SuppressWarnings("unchecked")
 	public static <T extends BlockRecipe> void toNetworkCasted(FriendlyByteBuf buf, T recipe) {
 		BlockRecipeSerializer<T> ser = (BlockRecipeSerializer<T>) recipe.getSerializer();
-		buf.writeResourceLocation(CBCRegistries.BLOCK_RECIPE_SERIALIZERS.get().getKey(ser));
+		buf.writeResourceLocation(CBCRegistries.BLOCK_RECIPE_SERIALIZERS.getKey(ser));
 		ser.toNetwork(buf, recipe);
 	}
 	
@@ -53,19 +57,19 @@ public class BlockRecipesManager {
 		for (int i = 0; i < sz; ++i) {
 			ResourceLocation id = buf.readResourceLocation();
 			ResourceLocation type = buf.readResourceLocation();
-			BLOCK_RECIPES.put(id, CBCRegistries.BLOCK_RECIPE_SERIALIZERS.get().getValue(type).fromNetwork(id, buf));
+			BLOCK_RECIPES.put(id, CBCRegistries.BLOCK_RECIPE_SERIALIZERS.get(type).fromNetwork(id, buf));
 		}
 	}
 	
 	public static void syncTo(ServerPlayer player) {
-		CBCNetwork.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), new ClientboundRecipesPacket());
+		CBCNetwork.INSTANCE.sendToClient(new ClientboundRecipesPacket(), player);
 	}
 	
 	public static void syncToAll() {
-		CBCNetwork.INSTANCE.send(PacketDistributor.ALL.noArg(), new ClientboundRecipesPacket());
+		CBCNetwork.INSTANCE.sendToClientsInCurrentServer(new ClientboundRecipesPacket());
 	}
 	
-	public static class ReloadListener extends SimpleJsonResourceReloadListener {
+	public static class ReloadListener extends SimpleJsonResourceReloadListener implements IdentifiableResourceReloadListener {
 		private static final Gson GSON = new Gson();
 		public static final ReloadListener INSTANCE = new ReloadListener();
 		
@@ -83,13 +87,18 @@ public class BlockRecipesManager {
 					ResourceLocation id = entry.getKey();
 					JsonObject obj = el.getAsJsonObject();
 					ResourceLocation type = new ResourceLocation(obj.get("type").getAsString());
-					BLOCK_RECIPES.put(id, CBCRegistries.BLOCK_RECIPE_SERIALIZERS.get().getValue(type).fromJson(id, obj));
+					BLOCK_RECIPES.put(id, CBCRegistries.BLOCK_RECIPE_SERIALIZERS.get(type).fromJson(id, obj));
 				}
 			}
 		}
+
+		@Override
+		public ResourceLocation getFabricId() {
+			return CreateBigCannons.resource("block_recipes");
+		}
 	}
 	
-	public static class ClientboundRecipesPacket {
+	public static class ClientboundRecipesPacket implements S2CPacket {
 		private FriendlyByteBuf buf;
 		
 		public ClientboundRecipesPacket() {}
@@ -102,12 +111,10 @@ public class BlockRecipesManager {
 			writeBuf(buf);
 		}
 		
-		public void handle(Supplier<NetworkEvent.Context> sup) {
-			NetworkEvent.Context ctx = sup.get();
-			ctx.enqueueWork(() -> {
+		public void handle(Minecraft client, ClientPacketListener listener, PacketSender responseSender, SimpleChannel channel) {
+			client.execute(() -> {
 				readBuf(this.buf);
 			});
-			ctx.setPacketHandled(true);
 		}
 	}
 	

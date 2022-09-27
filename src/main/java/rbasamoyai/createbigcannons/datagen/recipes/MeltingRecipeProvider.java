@@ -4,6 +4,7 @@ import com.simibubi.create.content.contraptions.processing.HeatCondition;
 import com.simibubi.create.foundation.data.recipe.ProcessingRecipeGen;
 import com.simibubi.create.foundation.utility.recipe.IRecipeTypeInfo;
 
+import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
 import net.minecraft.data.DataGenerator;
 import rbasamoyai.createbigcannons.CBCBlocks;
 import rbasamoyai.createbigcannons.CBCFluids;
@@ -14,7 +15,7 @@ import rbasamoyai.createbigcannons.crafting.CBCRecipeTypes;
 
 public class MeltingRecipeProvider extends ProcessingRecipeGen {
 
-	public MeltingRecipeProvider(DataGenerator generator) {
+	public MeltingRecipeProvider(FabricDataGenerator generator) {
 		super(generator);
 	}
 

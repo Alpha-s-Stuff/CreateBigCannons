@@ -1,5 +1,6 @@
 package rbasamoyai.createbigcannons.mixin;
 
+import io.github.fabricators_of_create.porting_lib.util.FluidStack;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -11,7 +12,6 @@ import com.simibubi.create.foundation.fluid.FluidIngredient.FluidTagIngredient;
 
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraftforge.fluids.FluidStack;
 import rbasamoyai.createbigcannons.CreateBigCannons;
 
 @Mixin(FluidTagIngredient.class)
@@ -22,7 +22,7 @@ public abstract class FixFluidTagIngredientMixin {
 	public TagKey<Fluid> tag;
 	
 	@SuppressWarnings("deprecation")
-	@Inject(at = @At("HEAD"), method = "testInternal(Lnet/minecraftforge/fluids/FluidStack;)Z", cancellable = true, remap = false)
+	@Inject(at = @At("HEAD"), method = "testInternal", cancellable = true, remap = false)
 	public void createbigcannons$testInternal(FluidStack stack, CallbackInfoReturnable<Boolean> cbi) {
 		FluidTagIngredient self = (FluidTagIngredient) (Object) this;
 		if (tag == null) {

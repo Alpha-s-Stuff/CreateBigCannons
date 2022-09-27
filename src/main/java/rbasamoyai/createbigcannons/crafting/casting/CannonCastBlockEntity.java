@@ -13,6 +13,12 @@ import com.simibubi.create.foundation.tileEntity.TileEntityBehaviour;
 import com.simibubi.create.foundation.utility.animation.LerpedFloat;
 import com.simibubi.create.foundation.utility.animation.LerpedFloat.Chaser;
 
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import io.github.fabricators_of_create.porting_lib.transfer.fluid.FluidTank;
+import io.github.fabricators_of_create.porting_lib.transfer.fluid.FluidTransferable;
+import io.github.fabricators_of_create.porting_lib.util.FluidStack;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -30,13 +36,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
-import net.minecraftforge.fluids.capability.templates.FluidTank;
 import rbasamoyai.createbigcannons.CBCBlocks;
 import rbasamoyai.createbigcannons.cannons.ICannonBlockEntity;
 import rbasamoyai.createbigcannons.config.CBCConfigs;
@@ -44,12 +43,11 @@ import rbasamoyai.createbigcannons.crafting.BlockRecipe;
 import rbasamoyai.createbigcannons.crafting.BlockRecipeFinder;
 import rbasamoyai.createbigcannons.crafting.WandActionable;
 
-public class CannonCastBlockEntity extends SmartTileEntity implements WandActionable, IMultiTileContainer {
+public class CannonCastBlockEntity extends SmartTileEntity implements WandActionable, IMultiTileContainer, FluidTransferable {
 
 	private static final Object CASTING_RECIPES_KEY = new Object();
 	
 	protected FluidTank fluid;
-	protected LazyOptional<IFluidHandler> fluidOptional = null;
 	protected List<CannonCastShape> structure = new ArrayList<>();
 	protected CannonCastShape castShape = CannonCastShape.VERY_SMALL;
 	protected BlockPos controllerPos;
@@ -97,36 +95,7 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 		this.syncCooldown = SYNC_RATE;
 	}
 	
-	@Override
-	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
-		if (cap == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY && side == Direction.UP) {
-			if (this.fluidOptional == null) {
-				this.fluidOptional = LazyOptional.of(this::createHandlerForCap);
-			}
-			return this.fluidOptional.cast();
-		}
-		return super.getCapability(cap, side);
-	}
-	
-	@Override
-	public void invalidateCaps() {
-		super.invalidateCaps();
-		if (this.fluidOptional != null) {
-			this.fluidOptional.invalidate();
-		}
-	}
-	
-	public void refreshCap() {
-		if (this.fluidOptional == null) {
-			this.fluidOptional = LazyOptional.of(this::createHandlerForCap);
-		} else {
-			LazyOptional<IFluidHandler> oldOp = this.fluidOptional;
-			this.fluidOptional = LazyOptional.of(this::createHandlerForCap);
-			oldOp.invalidate();
-		}
-	}
-	
-	private IFluidHandler createHandlerForCap() {
+	private Storage<FluidVariant> createHandlerForCap() {
 		return this.isController() ? this.fluid : this.getControllerTE().createHandlerForCap();
 	}
 	
@@ -258,7 +227,7 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 	protected void tickCastingBehavior() {
 		if (this.level.isClientSide) return;
 		if (this.level.getBlockState(this.worldPosition.below()).getMaterial().isReplaceable()) {
-			FluidStack fstack = this.fluid.drain(20, FluidAction.EXECUTE);
+			FluidStack fstack = TransferUtil.extractAnyFluid(this.fluid, 1620);
 			if (!fstack.isEmpty()) {
 				if (this.leakage.isEmpty()) {
 					this.leakage = fstack;
@@ -372,7 +341,7 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 			if (controller.height + otherCast.height <= getMaxHeight()) {
 				controller.height += otherCast.height;
 				controller.fluid.setCapacity(controller.fluid.getCapacity() + this.castShape.fluidSize());
-				controller.fluid.fill(otherCast.fluid.drain(otherCast.fluid.getCapacity(), FluidAction.EXECUTE), FluidAction.EXECUTE);
+				TransferUtil.insertFluid(controller.fluid, TransferUtil.extractAnyFluid(otherCast.fluid, otherCast.fluid.getCapacity()));
 				controller.structure.addAll(otherCast.structure);
 				
 				otherCast.fluid = new FluidTank(1);
@@ -408,8 +377,8 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 					.map(CannonCastShape::fluidSize)
 					.reduce(Integer::sum)
 					.orElseGet(() -> 0);
-			int leakAmount = Mth.clamp(controller.fluid.getFluidAmount() - capacityUpTo, 0, this.castShape.fluidSize());
-			FluidStack addLeak = controller.fluid.drain(leakAmount, FluidAction.EXECUTE);
+			long leakAmount = Mth.clamp(controller.fluid.getFluidAmount() - capacityUpTo, 0, this.castShape.fluidSize());
+			FluidStack addLeak = TransferUtil.extractAnyFluid(controller.fluid, leakAmount);
 			controller.fluid.setCapacity(Math.max(1, controller.fluid.getCapacity() - this.castShape.fluidSize()));
 			FluidStack remaining = controller.fluid.getFluid();
 			
@@ -419,7 +388,7 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 					otherCast.height = this.height;
 					otherCast.structure = getStructureFromPoint(this.level, this.worldPosition.above(), this.height);
 					otherCast.fluid = new SmartFluidTank(otherCast.calculateCapacityFromStructure(), otherCast::onFluidStackChanged);
-					otherCast.fluid.fill(remaining, FluidAction.EXECUTE);
+					TransferUtil.insertFluid(otherCast.fluid, remaining);
 					otherCast.updatePotentialCastsAbove();
 					otherCast.notifyUpdate();
 				}
@@ -428,7 +397,7 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 				controller.height = thisIndex;
 				controller.structure = controller.structure.subList(0, Mth.clamp(thisIndex, 0, controller.structure.size()));
 				controller.fluid = new SmartFluidTank(controller.calculateCapacityFromStructure(), controller::onFluidStackChanged);
-				int firstRemaining = remaining.getAmount() - controller.fluid.fill(remaining, FluidAction.EXECUTE);
+				long firstRemaining = remaining.getAmount() - TransferUtil.insertFluid(controller.fluid, remaining);
 				if (!remaining.isEmpty()) remaining.setAmount(firstRemaining);
 				controller.updateRecipes = true;
 				controller.notifyUpdate();
@@ -438,7 +407,7 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 					otherCast.height = oldHeight - controller.height;
 					otherCast.structure = getStructureFromPoint(this.level, this.worldPosition.above(), otherCast.height);
 					otherCast.fluid = new SmartFluidTank(otherCast.calculateCapacityFromStructure(), otherCast::onFluidStackChanged);
-					otherCast.fluid.fill(remaining, FluidAction.EXECUTE);
+					TransferUtil.insertFluid(otherCast.fluid, remaining);
 					otherCast.updatePotentialCastsAbove();
 					otherCast.updateRecipes = true;
 					otherCast.notifyUpdate();
@@ -533,7 +502,6 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 	public void setController(BlockPos pos) {
 		if (this.level.isClientSide || this.isVirtual() || pos.equals(this.controllerPos)) return;
 		this.controllerPos = pos;
-		this.refreshCap();
 		this.notifyUpdate();
 	}
 	
@@ -560,7 +528,6 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 
 	@Override
 	public void removeController(boolean keepContents) {
-		this.refreshCap();
 		this.notifyUpdate();
 	}
 
@@ -578,4 +545,11 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 	@Override public int getMaxWidth() { return 3; }
 	@Override public void setWidth(int width) {}
 
+	@Override
+	public Storage<FluidVariant> getFluidStorage(Direction side) {
+		if (side == Direction.UP) {
+			return this.isController() ? this.fluid : this.getControllerTE().createHandlerForCap();
+		}
+		return null;
+	}
 }

@@ -2,6 +2,8 @@ package rbasamoyai.createbigcannons.munitions.shrapnel;
 
 import java.util.Random;
 
+import io.github.fabricators_of_create.porting_lib.mixin.common.accessor.DamageSourceAccessor;
+import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -86,15 +88,15 @@ public class Shrapnel extends AbstractHurtingProjectile {
 		this.discard();
 	}
 	
-	public static final DamageSource SHRAPNEL = new DamageSource(CreateBigCannons.MOD_ID + ".shrapnel");
+	public static final DamageSource SHRAPNEL = DamageSourceAccessor.port_lib$init(CreateBigCannons.MOD_ID + ".shrapnel");
 	protected DamageSource getDamageSource() { return SHRAPNEL; }
 	
-	public static void build(EntityType.Builder<? extends Shrapnel> builder) {
-		builder.setTrackingRange(3)
-				.setUpdateInterval(20)
-				.setShouldReceiveVelocityUpdates(true)
+	public static void build(FabricEntityTypeBuilder<? extends Shrapnel> builder) {
+		builder.trackedUpdateRate(3)
+				.trackedUpdateRate(20)
+				.forceTrackedVelocityUpdates(true)
 				.fireImmune()
-				.sized(0.25f, 0.25f);
+				.dimensions(EntityDimensions.fixed(0.25f, 0.25f));
 	}
 	
 	@Override protected float getEyeHeight(Pose pose, EntityDimensions dimensions) { return 0.125f; }

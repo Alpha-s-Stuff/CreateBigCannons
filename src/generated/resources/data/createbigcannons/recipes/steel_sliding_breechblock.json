@@ -7,7 +7,7 @@
   ],
   "key": {
     "I": {
-      "tag": "forge:ingots/steel"
+      "tag": "c:ingots/steel"
     },
     "C": {
       "item": "create:cogwheel"

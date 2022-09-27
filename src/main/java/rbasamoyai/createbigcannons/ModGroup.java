@@ -2,6 +2,7 @@ package rbasamoyai.createbigcannons;
 
 import java.util.Arrays;
 
+import io.github.fabricators_of_create.porting_lib.util.LazyItemGroup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
@@ -9,7 +10,7 @@ import rbasamoyai.createbigcannons.munitions.fuzes.TimedFuzeItem;
 
 public class ModGroup {
 	
-	public static final CreativeModeTab GROUP = new CreativeModeTab(CreateBigCannons.MOD_ID) {
+	public static final CreativeModeTab GROUP = new LazyItemGroup(CreateBigCannons.MOD_ID) {
 		@Override
 		public ItemStack makeIcon() {
 			return CBCBlocks.SOLID_SHOT.asStack();

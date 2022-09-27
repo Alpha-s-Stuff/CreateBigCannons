@@ -6,6 +6,7 @@ import com.simibubi.create.content.contraptions.processing.HeatCondition;
 import com.simibubi.create.foundation.data.recipe.ProcessingRecipeGen;
 import com.simibubi.create.foundation.utility.recipe.IRecipeTypeInfo;
 
+import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Items;
@@ -16,7 +17,7 @@ import rbasamoyai.createbigcannons.CreateBigCannons;
 
 public class CBCCompactingRecipeProvider extends ProcessingRecipeGen {
 
-	public CBCCompactingRecipeProvider(DataGenerator generator) {
+	public CBCCompactingRecipeProvider(FabricDataGenerator generator) {
 		super(generator);
 	}
 	

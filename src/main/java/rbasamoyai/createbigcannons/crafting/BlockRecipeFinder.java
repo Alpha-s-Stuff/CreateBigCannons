@@ -11,8 +11,12 @@ import javax.annotation.Nullable;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
+import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.world.level.Level;
+import rbasamoyai.createbigcannons.CreateBigCannons;
 
 public class BlockRecipeFinder {
 
@@ -33,8 +37,16 @@ public class BlockRecipeFinder {
 		return BlockRecipesManager.getRecipes().stream().filter(predicates).collect(Collectors.toList());
 	}
 	
-	public static final ResourceManagerReloadListener LISTENER = manager -> {
-		blockRecipeCache.invalidateAll();
+	public static final SimpleSynchronousResourceReloadListener LISTENER = new SimpleSynchronousResourceReloadListener() {
+		@Override
+		public void onResourceManagerReload(ResourceManager manager) {
+			blockRecipeCache.invalidateAll();
+		}
+
+		@Override
+		public ResourceLocation getFabricId() {
+			return CreateBigCannons.resource("block_recipe_finder");
+		}
 	};
 	
 }

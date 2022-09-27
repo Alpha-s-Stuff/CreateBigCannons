@@ -1,8 +1,8 @@
 {
   "replace": false,
   "values": [
-    "#forge:glass",
-    "#forge:glass_panes",
+    "#c:glass",
+    "#c:glass_panes",
     "#minecraft:leaves",
     "#minecraft:wool",
     "minecraft:flower_pot"

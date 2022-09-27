@@ -1,5 +1,6 @@
 package rbasamoyai.createbigcannons.munitions;
 
+import io.github.fabricators_of_create.porting_lib.util.NBTSerializer;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
@@ -37,7 +38,7 @@ public abstract class FuzedCannonProjectile extends AbstractCannonProjectile {
 	@Override
 	public void addAdditionalSaveData(CompoundTag tag) {
 		super.addAdditionalSaveData(tag);
-		tag.put("Fuze", this.fuze.serializeNBT());
+		tag.put("Fuze", NBTSerializer.serializeNBT(this.fuze));
 	}
 	
 	@Override

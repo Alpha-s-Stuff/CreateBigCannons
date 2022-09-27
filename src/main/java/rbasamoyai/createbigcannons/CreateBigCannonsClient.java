@@ -1,32 +1,24 @@
 
 package rbasamoyai.createbigcannons;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.particle.ParticleEngine;
-import net.minecraftforge.client.event.ParticleFactoryRegisterEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.particle.v1.ParticleFactoryRegistry;
 import rbasamoyai.createbigcannons.cannonmount.CannonPlumeParticle;
 import rbasamoyai.createbigcannons.ponder.CBCPonderIndex;
 
-public class CreateBigCannonsClient {
+public class CreateBigCannonsClient implements ClientModInitializer {
+	public static void onRegisterParticleFactories() {
+		ParticleFactoryRegistry.getInstance().register(CBCParticleTypes.CANNON_PLUME.get(), new CannonPlumeParticle.Provider());
+	}
 
-	public static void prepareClient(IEventBus modEventBus, IEventBus forgeEventBus) {
+	@Override
+	public void onInitializeClient() {
 		CBCBlockPartials.init();
-		modEventBus.addListener(CreateBigCannonsClient::onClientSetup);
-		modEventBus.addListener(CreateBigCannonsClient::onRegisterParticleFactories);
-	}
-	
-	public static void onRegisterParticleFactories(ParticleFactoryRegisterEvent event) {
-		@SuppressWarnings("resource")
-		ParticleEngine engine = Minecraft.getInstance().particleEngine;
-		
-		engine.register(CBCParticleTypes.CANNON_PLUME.get(), new CannonPlumeParticle.Provider());
-	}
-	
-	public static void onClientSetup(FMLClientSetupEvent event) {
+
 		CBCPonderIndex.register();
 		CBCPonderIndex.registerTags();
+
+		onRegisterParticleFactories();
 	}
 	
 }

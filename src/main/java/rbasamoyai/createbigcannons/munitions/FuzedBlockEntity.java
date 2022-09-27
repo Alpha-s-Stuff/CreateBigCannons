@@ -2,6 +2,11 @@ package rbasamoyai.createbigcannons.munitions;
 
 import com.simibubi.create.foundation.tileEntity.SyncedTileEntity;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemTransferable;
+import io.github.fabricators_of_create.porting_lib.util.LazyOptional;
+import io.github.fabricators_of_create.porting_lib.util.NBTSerializer;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -10,36 +15,33 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.items.CapabilityItemHandler;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.IItemHandlerModifiable;
+import org.jetbrains.annotations.Nullable;
 
-public class FuzedBlockEntity extends SyncedTileEntity {
+public class FuzedBlockEntity extends SyncedTileEntity implements ItemTransferable {
 
 	protected ItemStack fuze = ItemStack.EMPTY;
-	private LazyOptional<IItemHandler> fuzeOptional;
+	private LazyOptional<Storage<ItemVariant>> fuzeOptional;
 	
 	public FuzedBlockEntity(BlockEntityType<? extends FuzedBlockEntity> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
 	}
-	
+
+	@Nullable
 	@Override
-	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
-		if (cap == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY && side == this.getBlockState().getValue(BlockStateProperties.FACING)) {
+	public Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
+		if (side == this.getBlockState().getValue(BlockStateProperties.FACING)) {
 			if (this.fuzeOptional == null) {
 				this.fuzeOptional = LazyOptional.of(this::createHandler);
 			}
-			return this.fuzeOptional.cast();
+			return this.fuzeOptional.getValueUnsafer();
 		}
-		return super.getCapability(cap, side);
+		return null;
 	}
 	
 	public void setFuze(ItemStack stack) { this.fuze = stack; }
 	public ItemStack getFuze() { return this.fuze; }
 	
-	private IItemHandlerModifiable createHandler() {
+	private Storage<ItemVariant> createHandler() {
 		return new FuzeItemHandler(this);
 	}
 	
@@ -55,7 +57,7 @@ public class FuzedBlockEntity extends SyncedTileEntity {
 	protected void saveAdditional(CompoundTag tag) {
 		super.saveAdditional(tag);
 		if (!this.fuze.isEmpty()) {
-			tag.put("Fuze", this.fuze.serializeNBT());
+			tag.put("Fuze", NBTSerializer.serializeNBT(this.fuze));
 		}
 	}
 	
@@ -64,5 +66,4 @@ public class FuzedBlockEntity extends SyncedTileEntity {
 		super.load(tag);
 		this.fuze = tag.contains("Fuze", Tag.TAG_COMPOUND) ? ItemStack.of(tag.getCompound("Fuze")) : ItemStack.EMPTY;
 	}
-	
 }

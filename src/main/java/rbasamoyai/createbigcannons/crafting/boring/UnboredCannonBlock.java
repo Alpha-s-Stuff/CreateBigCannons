@@ -64,7 +64,7 @@ public class UnboredCannonBlock extends SolidCannonBlock<CannonEndBlockEntity> i
 		if (this.boredBlock == null) {
 			this.boredBlock = this.boredBlockSup.get();
 		}
-		BlockState bored = this.boredBlock.delegate.get().defaultBlockState();
+		BlockState bored = this.boredBlock.defaultBlockState();
 		return bored.hasProperty(FACING) ? bored.setValue(FACING, state.getValue(FACING)) : bored;
 	}
 	

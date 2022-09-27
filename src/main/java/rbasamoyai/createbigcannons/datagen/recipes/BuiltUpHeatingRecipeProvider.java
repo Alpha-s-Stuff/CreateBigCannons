@@ -8,11 +8,11 @@ import java.util.function.Consumer;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+import net.minecraft.core.Registry;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.level.block.Block;
-import net.minecraftforge.registries.ForgeRegistries;
 import rbasamoyai.createbigcannons.CBCBlocks;
 import rbasamoyai.createbigcannons.CreateBigCannons;
 import rbasamoyai.createbigcannons.crafting.BlockRecipeSerializer;
@@ -243,7 +243,7 @@ public class BuiltUpHeatingRecipeProvider extends BlockRecipeProvider {
 			})
 			.forEach(layersArr::add);
 			obj.add("layers", layersArr);
-			obj.addProperty("result", ForgeRegistries.BLOCKS.getKey(this.result).toString());
+			obj.addProperty("result", Registry.BLOCK.getKey(this.result).toString());
 		}
 
 		@Override public ResourceLocation getId() { return this.id; }

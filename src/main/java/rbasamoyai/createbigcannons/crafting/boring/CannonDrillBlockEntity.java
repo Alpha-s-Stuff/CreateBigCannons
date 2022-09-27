@@ -19,9 +19,16 @@ import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.utility.Lang;
 import com.simibubi.create.foundation.utility.ServerSpeedProvider;
 
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import io.github.fabricators_of_create.porting_lib.transfer.fluid.FluidTank;
+import io.github.fabricators_of_create.porting_lib.transfer.fluid.FluidTransferable;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Registry;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
@@ -46,14 +53,6 @@ import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
-import net.minecraftforge.fluids.capability.templates.FluidTank;
-import net.minecraftforge.network.PacketDistributor;
-import net.minecraftforge.registries.ForgeRegistries;
 import rbasamoyai.createbigcannons.CBCBlocks;
 import rbasamoyai.createbigcannons.CBCTags;
 import rbasamoyai.createbigcannons.CreateBigCannons;
@@ -63,7 +62,7 @@ import rbasamoyai.createbigcannons.cannons.CannonBlock;
 import rbasamoyai.createbigcannons.network.CBCNetwork;
 import rbasamoyai.createbigcannons.network.ClientboundUpdateContraptionPacket;
 
-public class CannonDrillBlockEntity extends PoleMoverBlockEntity {
+public class CannonDrillBlockEntity extends PoleMoverBlockEntity implements FluidTransferable {
 
 	protected AbstractContraptionEntity latheEntity;
 	protected BlockPos boringPos;
@@ -71,41 +70,35 @@ public class CannonDrillBlockEntity extends PoleMoverBlockEntity {
 	protected float addedStressImpact;
 	protected FailureReason failureReason = FailureReason.NONE;
 	protected FluidTank lubricant;
-	private LazyOptional<IFluidHandler> fluidOptional;
 	
 	public CannonDrillBlockEntity(BlockEntityType<? extends CannonDrillBlockEntity> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
-		this.lubricant = new FluidTank(1000, fs -> fs.getFluid() == Fluids.WATER);
-	}
-	
-	@Override
-	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
-		if (cap == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY) {
-			Direction facing = this.getBlockState().getValue(BlockStateProperties.FACING);
-			boolean alongFirst = this.getBlockState().getValue(DirectionalAxisKineticBlock.AXIS_ALONG_FIRST_COORDINATE);
-			Direction.Axis pipeAxis = switch (facing.getAxis()) {
-				case X -> alongFirst ? Direction.Axis.Z : Direction.Axis.Y;
-				case Y -> alongFirst ? Direction.Axis.Z : Direction.Axis.X;
-				default -> alongFirst ? Direction.Axis.Y : Direction.Axis.X;
-			};
-			if (pipeAxis == side.getAxis()) {
-				return this.getFluidOptional().cast();
+		this.lubricant = new FluidTank(FluidConstants.BLOCK) {
+			@Override
+			protected boolean canInsert(FluidVariant fs) {
+				return fs.getFluid() == Fluids.WATER;
 			}
-		}
-		return super.getCapability(cap, side);
+
+			@Override
+			protected boolean canExtract(FluidVariant fs) {
+				return fs.getFluid() == Fluids.WATER;
+			}
+		};
 	}
-	
-	private LazyOptional<IFluidHandler> getFluidOptional() {
-		if (this.fluidOptional == null) {
-			this.fluidOptional = LazyOptional.of(() -> this.lubricant);
-		}
-		return this.fluidOptional;
-	}
-	
+
 	@Override
-	public void invalidateCaps() {
-		super.invalidateCaps();
-		if (this.fluidOptional != null) this.fluidOptional.invalidate();
+	public Storage<FluidVariant> getFluidStorage(Direction side) {
+		Direction facing = this.getBlockState().getValue(BlockStateProperties.FACING);
+		boolean alongFirst = this.getBlockState().getValue(DirectionalAxisKineticBlock.AXIS_ALONG_FIRST_COORDINATE);
+		Direction.Axis pipeAxis = switch (facing.getAxis()) {
+			case X -> alongFirst ? Direction.Axis.Z : Direction.Axis.Y;
+			case Y -> alongFirst ? Direction.Axis.Z : Direction.Axis.X;
+			default -> alongFirst ? Direction.Axis.Y : Direction.Axis.X;
+		};
+		if (pipeAxis == side.getAxis()) {
+			return this.lubricant;
+		}
+		return null;
 	}
 
 	@Override
@@ -303,7 +296,7 @@ public class CannonDrillBlockEntity extends PoleMoverBlockEntity {
 				int drainSpeed = (int) Mth.abs(bearing.getSpeed() * 0.5f);
 				if (Math.abs(bearing.getSpeed()) > Math.abs(this.getSpeed())) {
 					this.failureReason = FailureReason.TOO_WEAK;
-				} else if (this.lubricant.drain(drainSpeed, FluidAction.EXECUTE).getAmount() < drainSpeed) {
+				} else if (TransferUtil.extractAnyFluid(this.lubricant, drainSpeed).getAmount() < drainSpeed) {
 					if (this.level instanceof ServerLevel slevel) {
 						Vec3 particlePos = Vec3.atCenterOf(globalPos);
 						slevel.sendParticles(ParticleTypes.SMOKE, particlePos.x, particlePos.y, particlePos.z, 10, 0.0d, 1.0d, 0.0d, 0.1d);
@@ -369,7 +362,7 @@ public class CannonDrillBlockEntity extends PoleMoverBlockEntity {
 		
 		BlockState boredState = unbored.getBoredBlockState(latheBlockInfo.state);
 		if (latheBlockInfo.nbt != null && boredState.getBlock() instanceof ITE<?> boredBE) {
-			latheBlockInfo.nbt.putString("id", ForgeRegistries.BLOCK_ENTITIES.getKey(boredBE.getTileEntityType()).toString());
+			latheBlockInfo.nbt.putString("id", Registry.BLOCK_ENTITY_TYPE.getKey(boredBE.getTileEntityType()).toString());
 			latheBlockInfo.nbt.putBoolean("JustBored", true);
 		}
 		
@@ -380,7 +373,7 @@ public class CannonDrillBlockEntity extends PoleMoverBlockEntity {
 		lathe.getBlocks().put(boringOffset, newInfo);
 		bearing.notifyUpdate();
 		
-		ResourceLocation unboredId = ForgeRegistries.BLOCKS.getKey(latheBlockInfo.state.getBlock());
+		ResourceLocation unboredId = Registry.BLOCK.getKey(latheBlockInfo.state.getBlock());
 		LootTable table = slevel.getServer().getLootTables().get(new ResourceLocation(unboredId.getNamespace(), "boring_scrap/" + unboredId.getPath()));
 		List<ItemStack> scrap = table.getRandomItems(new LootContext.Builder(slevel)
 				.withRandom(slevel.random)
@@ -391,7 +384,7 @@ public class CannonDrillBlockEntity extends PoleMoverBlockEntity {
 		scrap.forEach(s -> Block.popResource(this.level, this.boringPos, s));
 		
 		this.level.playSound(null, this.boringPos, SoundEvents.UI_STONECUTTER_TAKE_RESULT, SoundSource.BLOCKS, 1.0f, 1.0f);
-		CBCNetwork.INSTANCE.send(PacketDistributor.TRACKING_ENTITY.with(() -> this.latheEntity), new ClientboundUpdateContraptionPacket(this.latheEntity, boringOffset, newInfo));
+		CBCNetwork.INSTANCE.sendToClientsTracking(new ClientboundUpdateContraptionPacket(this.latheEntity, boringOffset, newInfo), this.latheEntity);
 		this.boringPos = null;
 	}
 	
@@ -418,7 +411,7 @@ public class CannonDrillBlockEntity extends PoleMoverBlockEntity {
 	public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
 		super.addToGoggleTooltip(tooltip, isPlayerSneaking);
 		tooltip.add(TextComponent.EMPTY);
-		this.containedFluidTooltip(tooltip, isPlayerSneaking, this.getFluidOptional());
+		this.containedFluidTooltip(tooltip, isPlayerSneaking, this.lubricant);
 		if (this.failureReason != FailureReason.NONE) {
 			tooltip.add(TextComponent.EMPTY);
 			Lang.builder("exception")
@@ -433,7 +426,7 @@ public class CannonDrillBlockEntity extends PoleMoverBlockEntity {
 		
 		return true;
 	}
-	
+
 	public enum FailureReason implements StringRepresentable {
 		DRY_BORE("dryBore"),
 		TOO_WEAK("tooWeak"),

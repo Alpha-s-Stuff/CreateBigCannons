@@ -10,6 +10,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Registry;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
@@ -21,8 +22,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.ForgeRegistryEntry;
 import rbasamoyai.createbigcannons.cannons.CannonBlock;
 import rbasamoyai.createbigcannons.cannons.ICannonBlockEntity;
 import rbasamoyai.createbigcannons.crafting.BlockRecipe;
@@ -80,7 +79,7 @@ public class BuiltUpHeatingRecipe implements BlockRecipe {
 	@Override public ResourceLocation getId() { return this.id; }
 	@Override public BlockRecipeSerializer<?> getSerializer() { return BlockRecipeSerializer.BUILT_UP_HEATING.get(); }
 
-	public static class Serializer extends ForgeRegistryEntry<BlockRecipeSerializer<?>> implements BlockRecipeSerializer<BuiltUpHeatingRecipe> {
+	public static class Serializer implements BlockRecipeSerializer<BuiltUpHeatingRecipe> {
 		@Override
 		public BuiltUpHeatingRecipe fromJson(ResourceLocation id, JsonObject obj) {
 			JsonArray layerArr = obj.getAsJsonArray("layers");
@@ -90,7 +89,7 @@ public class BuiltUpHeatingRecipe implements BlockRecipe {
 					layers.add(LayerPredicate.fromJson(el.getAsJsonObject()));
 				}
 			}
-			Block result = ForgeRegistries.BLOCKS.getValue(new ResourceLocation(obj.get("result").getAsString()));
+			Block result = Registry.BLOCK.get(new ResourceLocation(obj.get("result").getAsString()));
 			return new BuiltUpHeatingRecipe(layers, result, id);
 		}
 
@@ -101,7 +100,7 @@ public class BuiltUpHeatingRecipe implements BlockRecipe {
 			for (int i = 0; i < sz; ++i) {
 				layers.add(LayerPredicate.fromNetwork(buf));
 			}
-			Block result = ForgeRegistries.BLOCKS.getValue(buf.readResourceLocation());
+			Block result = Registry.BLOCK.get(buf.readResourceLocation());
 			return new BuiltUpHeatingRecipe(layers, result, id);
 		}
 
@@ -111,7 +110,7 @@ public class BuiltUpHeatingRecipe implements BlockRecipe {
 			if (recipe.layers != null && !recipe.layers.isEmpty()) {
 				recipe.layers.forEach(p -> p.toNetwork(buf));
 			}
-			buf.writeResourceLocation(ForgeRegistries.BLOCKS.getKey(recipe.result));
+			buf.writeResourceLocation(Registry.BLOCK.getKey(recipe.result));
 		}
 	}
 	
@@ -130,14 +129,14 @@ public class BuiltUpHeatingRecipe implements BlockRecipe {
 		public boolean test(Block t) {
 			if (this == ANY) return true;
 			if (this.blocks != null) return this.blocks.contains(t);
-			return this.tag == null ? true : ForgeRegistries.BLOCKS.tags().getTag(this.tag).contains(t);
+			return this.tag == null ? true : Registry.BLOCK.getTag(this.tag).get().contains(t.builtInRegistryHolder());
 		}
 		
 		public void serializeJson(JsonObject obj) {
 			if (this.blocks != null && !this.blocks.isEmpty()) {
 				JsonArray blockArr = new JsonArray(this.blocks.size());
 				for (Block block : this.blocks) {
-					blockArr.add(ForgeRegistries.BLOCKS.getKey(block).toString());
+					blockArr.add(Registry.BLOCK.getKey(block).toString());
 				}
 				obj.add("blocks", blockArr);
 			}
@@ -151,10 +150,10 @@ public class BuiltUpHeatingRecipe implements BlockRecipe {
 			Set<Block> blocks = blockArr == null || blockArr.isEmpty() ? null : new HashSet<>();
 			if (blocks != null) {
 				for (JsonElement el : blockArr) {
-					blocks.add(ForgeRegistries.BLOCKS.getValue(new ResourceLocation(el.getAsString())));
+					blocks.add(Registry.BLOCK.get(new ResourceLocation(el.getAsString())));
 				}
 			}
-			TagKey<Block> tag = obj.has("tag") ? BlockTags.create(new ResourceLocation(obj.get("tag").getAsString())) : null;
+			TagKey<Block> tag = obj.has("tag") ? TagKey.create(Registry.BLOCK_REGISTRY, new ResourceLocation(obj.get("tag").getAsString())) : null;
 			return new LayerPredicate(blocks, tag);
 		}
 		
@@ -162,7 +161,7 @@ public class BuiltUpHeatingRecipe implements BlockRecipe {
 			buf.writeVarInt(this.blocks == null ? 0 : this.blocks.size());
 			if (this.blocks != null) {
 				this.blocks.stream()
-				.map(ForgeRegistries.BLOCKS::getKey)
+				.map(Registry.BLOCK::getKey)
 				.forEach(buf::writeResourceLocation);
 			}
 			buf.writeBoolean(this.tag != null);
@@ -176,10 +175,10 @@ public class BuiltUpHeatingRecipe implements BlockRecipe {
 			Set<Block> blocks = sz == 0 ? null : new HashSet<>();
 			if (blocks != null) {
 				for (int i = 0; i < sz; ++i) {
-					blocks.add(ForgeRegistries.BLOCKS.getValue(buf.readResourceLocation()));
+					blocks.add(Registry.BLOCK.get(buf.readResourceLocation()));
 				}
 			}
-			TagKey<Block> tag = buf.readBoolean() ? BlockTags.create(buf.readResourceLocation()) : null;
+			TagKey<Block> tag = buf.readBoolean() ? TagKey.create(Registry.BLOCK_REGISTRY, buf.readResourceLocation()) : null;
 			return new LayerPredicate(blocks, tag);
 		}
 		

@@ -14,7 +14,7 @@
               "add": false
             }
           ],
-          "name": "forge:nuggets/steel",
+          "name": "c:nuggets/steel",
           "expand": true
         }
       ]
@@ -32,7 +32,7 @@
               "add": false
             }
           ],
-          "name": "forge:nuggets/steel",
+          "name": "c:nuggets/steel",
           "expand": true
         }
       ]
@@ -54,7 +54,7 @@
               "add": false
             }
           ],
-          "name": "forge:nuggets/steel",
+          "name": "c:nuggets/steel",
           "expand": true
         }
       ]

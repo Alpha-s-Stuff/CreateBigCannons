@@ -1,5 +1,10 @@
 package rbasamoyai.createbigcannons;
 
+import io.github.fabricators_of_create.porting_lib.event.common.OnDatapackSyncCallback;
+import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.players.PlayerList;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -8,16 +13,6 @@ import com.tterrag.registrate.util.nullness.NonNullSupplier;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.AddReloadListenerEvent;
-import net.minecraftforge.event.OnDatapackSyncEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import rbasamoyai.createbigcannons.base.CBCCommonEvents;
 import rbasamoyai.createbigcannons.base.CBCRegistries;
 import rbasamoyai.createbigcannons.config.CBCConfigs;
@@ -28,19 +23,17 @@ import rbasamoyai.createbigcannons.crafting.CBCRecipeTypes;
 import rbasamoyai.createbigcannons.crafting.casting.CannonCastShape;
 import rbasamoyai.createbigcannons.network.CBCNetwork;
 
-@Mod(CreateBigCannons.MOD_ID)
-public class CreateBigCannons {
+import javax.annotation.Nullable;
+
+public class CreateBigCannons implements ModInitializer {
 
 	public static final Logger LOGGER = LogManager.getLogger();
 	public static final String MOD_ID = "createbigcannons";
 	
 	private static final NonNullSupplier<CreateRegistrate> REGISTRATE = CreateRegistrate.lazy(MOD_ID);
-	
-	public CreateBigCannons() {
-		IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
-		IEventBus forgeEventBus = MinecraftForge.EVENT_BUS;
-		ModLoadingContext mlContext = ModLoadingContext.get();
-		
+
+	@Override
+	public void onInitialize() {
 		CBCRegistries.init();
 		
 		ModGroup.register();
@@ -50,39 +43,38 @@ public class CreateBigCannons {
 		CBCEntityTypes.register();
 		CBCMenuTypes.register();
 		CBCFluids.register();
-		CBCRecipeTypes.register(modEventBus);
+		CBCRecipeTypes.register();
 		
 		CannonCastShape.register();
 		CBCContraptionTypes.prepare();
 		CBCChecks.register();
 		BlockRecipeSerializer.register();
 		
-		CBCParticleTypes.PARTICLE_TYPES.register(modEventBus);		
+		CBCParticleTypes.PARTICLE_TYPES.register();
 		
 		CBCTags.register();
 		
-		modEventBus.addListener(this::onCommonSetup);
+		this.onCommonSetup();
 		
-		forgeEventBus.addListener(this::onAddReloadListeners);
-		forgeEventBus.addListener(this::onDatapackSync);
-		CBCCommonEvents.register(forgeEventBus);
+		this.onAddReloadListeners();
+		OnDatapackSyncCallback.EVENT.register(this::onDatapackSync);
+		CBCCommonEvents.register();
 		
-		CBCConfigs.registerConfigs(mlContext);
-		
-		DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> CreateBigCannonsClient.prepareClient(modEventBus, forgeEventBus));
+		CBCConfigs.registerConfigs();
+
+		REGISTRATE.get().register();
 	}
 	
-	private void onCommonSetup(FMLCommonSetupEvent event) {
+	private void onCommonSetup() {
 		CBCNetwork.init();
 	}
 	
-	private void onAddReloadListeners(AddReloadListenerEvent event) {
-		event.addListener(BlockRecipeFinder.LISTENER);
-		event.addListener(BlockRecipesManager.ReloadListener.INSTANCE);
+	private void onAddReloadListeners() {
+		ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(BlockRecipeFinder.LISTENER);
+		ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(BlockRecipesManager.ReloadListener.INSTANCE);
 	}
 	
-	private void onDatapackSync(OnDatapackSyncEvent event) {
-		ServerPlayer player = event.getPlayer();
+	private void onDatapackSync(PlayerList playerList, @Nullable ServerPlayer player) {
 		if (player == null) {
 			BlockRecipesManager.syncToAll();
 		} else {

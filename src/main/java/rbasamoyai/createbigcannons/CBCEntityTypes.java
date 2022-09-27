@@ -23,9 +23,9 @@ public class CBCEntityTypes {
 
 	public static final EntityEntry<PitchOrientedContraptionEntity> PITCH_ORIENTED_CONTRAPTION = CreateBigCannons.registrate()
 			.entity("pitch_contraption", PitchOrientedContraptionEntity::new, MobCategory.MISC)
-			.properties(b -> b.setTrackingRange(16)
-					.setUpdateInterval(3)
-					.setShouldReceiveVelocityUpdates(true)
+			.properties(b -> b.trackRangeChunks(16)
+					.trackedUpdateRate(3)
+					.forceTrackedVelocityUpdates(true)
 					.fireImmune())
 			.properties(AbstractContraptionEntity::build)
 			.renderer(() -> OrientedContraptionEntityRenderer::new)

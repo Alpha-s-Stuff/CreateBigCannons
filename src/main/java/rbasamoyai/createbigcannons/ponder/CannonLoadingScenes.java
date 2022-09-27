@@ -11,6 +11,7 @@ import com.simibubi.create.foundation.ponder.element.WorldSectionElement;
 import com.simibubi.create.foundation.ponder.instruction.EmitParticlesInstruction.Emitter;
 import com.simibubi.create.foundation.utility.Pointing;
 
+import io.github.fabricators_of_create.porting_lib.util.NBTSerializer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
@@ -249,7 +250,7 @@ public class CannonLoadingScenes {
 				.rightClick()
 				.withItem(CBCItems.IMPACT_FUZE.asStack()), 60);
 		scene.idle(20);
-		scene.world.modifyTileNBT(munitionSel, FuzedBlockEntity.class, tag -> tag.put("Fuze", CBCItems.IMPACT_FUZE.asStack().serializeNBT()));
+		scene.world.modifyTileNBT(munitionSel, FuzedBlockEntity.class, tag -> tag.put("Fuze", NBTSerializer.serializeNBT(CBCItems.IMPACT_FUZE.asStack())));
 		scene.idle(50);
 		
 		scene.overlay.showText(80)
@@ -268,7 +269,7 @@ public class CannonLoadingScenes {
 		scene.world.showSection(largeCog, Direction.WEST);
 		
 		BlockPos deployerPos = util.grid.at(2, 1, 1);
-		scene.world.modifyTileNBT(util.select.position(deployerPos), DeployerTileEntity.class, tag -> tag.put("HeldItem", CBCItems.TIMED_FUZE.asStack().serializeNBT()));
+		scene.world.modifyTileNBT(util.select.position(deployerPos), DeployerTileEntity.class, tag -> tag.put("HeldItem", NBTSerializer.serializeNBT(CBCItems.TIMED_FUZE.asStack())));
 		
 		scene.world.setKineticSpeed(kineticSel, 32.0f);
 		scene.world.setKineticSpeed(largeCog, -16.0f);
@@ -280,8 +281,8 @@ public class CannonLoadingScenes {
 		scene.idle(90);
 		scene.world.moveDeployer(deployerPos, 1, 25);
 		scene.idle(26);
-		scene.world.modifyTileNBT(util.select.position(deployerPos), DeployerTileEntity.class, tag -> tag.put("HeldItem", ItemStack.EMPTY.serializeNBT()));
-		scene.world.modifyTileNBT(munitionSel, FuzedBlockEntity.class, tag -> tag.put("Fuze", CBCItems.TIMED_FUZE.asStack().serializeNBT()));
+		scene.world.modifyTileNBT(util.select.position(deployerPos), DeployerTileEntity.class, tag -> tag.put("HeldItem", NBTSerializer.serializeNBT(ItemStack.EMPTY)));
+		scene.world.modifyTileNBT(munitionSel, FuzedBlockEntity.class, tag -> tag.put("Fuze", NBTSerializer.serializeNBT(CBCItems.TIMED_FUZE.asStack())));
 		scene.world.moveDeployer(deployerPos, -1, 25);
 		scene.idle(46);
 		

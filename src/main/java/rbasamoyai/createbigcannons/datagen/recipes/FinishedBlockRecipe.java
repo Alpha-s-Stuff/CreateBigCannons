@@ -13,7 +13,7 @@ public interface FinishedBlockRecipe {
 	
 	default JsonObject serializeRecipe() {
 		JsonObject obj = new JsonObject();
-		obj.addProperty("type", CBCRegistries.BLOCK_RECIPE_SERIALIZERS.get().getKey(this.getSerializer()).toString());
+		obj.addProperty("type", CBCRegistries.BLOCK_RECIPE_SERIALIZERS.getKey(this.getSerializer()).toString());
 		this.serializeRecipeData(obj);
 		return obj;
 	}

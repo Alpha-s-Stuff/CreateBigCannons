@@ -1,6 +1,5 @@
 package rbasamoyai.createbigcannons.munitions;
 
-import com.jozufozu.flywheel.core.virtual.VirtualEmptyModelData;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Quaternion;
 import com.mojang.math.Vector3f;
@@ -36,7 +35,7 @@ public class CannonProjectileRenderer<T extends AbstractCannonProjectile> extend
 			poseStack.translate(-0.5d, -0.1d, -0.5d);
 			
 			BlockRenderDispatcher brd = Minecraft.getInstance().getBlockRenderer();
-			brd.renderSingleBlock(blockState, poseStack, buffers, packedLight, OverlayTexture.NO_OVERLAY, VirtualEmptyModelData.INSTANCE);
+			brd.renderSingleBlock(blockState, poseStack, buffers, packedLight, OverlayTexture.NO_OVERLAY);
 			
 			poseStack.popPose();
 			super.render(entity, entityYaw, partialTicks, poseStack, buffers, packedLight);

@@ -1,27 +1,23 @@
 package rbasamoyai.createbigcannons;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.function.Supplier;
-
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.tterrag.registrate.providers.ProviderType;
-
+import me.alphamode.forgetags.Tags;
+import net.minecraft.core.Registry;
 import net.minecraft.data.tags.TagsProvider.TagAppender;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraftforge.common.Tags;
-import net.minecraftforge.registries.ForgeRegistries;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Supplier;
 public class CBCTags {
 
 	private static final CreateRegistrate REGISTRATE = CreateBigCannons.registrate();
@@ -36,7 +32,7 @@ public class CBCTags {
 			DRILL_CAN_PASS_THROUGH = createAndGenerateBlockTag(CreateBigCannons.resource("drill_can_pass_through"));
 		
 		public static TagKey<Block> createAndGenerateBlockTag(ResourceLocation loc) {
-			TagKey<Block> tag = BlockTags.create(loc); 
+			TagKey<Block> tag = TagKey.create(Registry.BLOCK_REGISTRY, loc);
 			REGISTRATE.addDataGenerator(ProviderType.BLOCK_TAGS, prov -> prov.tag(tag));
 			return tag;
 		}
@@ -87,13 +83,13 @@ public class CBCTags {
 			BLOCK_STEEL = forgeTag("blocks/steel");
 		
 		public static TagKey<Item> createAndGenerateItemTag(ResourceLocation loc) {
-			TagKey<Item> tag = ItemTags.create(loc); 
+			TagKey<Item> tag = TagKey.create(Registry.ITEM_REGISTRY, loc);
 			REGISTRATE.addDataGenerator(ProviderType.ITEM_TAGS, prov -> prov.tag(tag));
 			return tag;
 		}
 		
 		public static TagKey<Item> forgeTag(String path) {
-			TagKey<Item> tag = ForgeRegistries.ITEMS.tags().createOptionalTagKey(new ResourceLocation("forge", path), Collections.emptySet());
+			TagKey<Item> tag = TagKey.create(Registry.ITEM_REGISTRY, new ResourceLocation("c", path));
 			REGISTRATE.addDataGenerator(ProviderType.ITEM_TAGS, prov -> prov.tag(tag));
 			return tag;
 		}

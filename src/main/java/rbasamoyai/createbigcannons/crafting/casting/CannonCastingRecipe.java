@@ -5,14 +5,13 @@ import com.simibubi.create.foundation.fluid.FluidIngredient;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Registry;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.ForgeRegistryEntry;
 import rbasamoyai.createbigcannons.crafting.BlockRecipe;
 import rbasamoyai.createbigcannons.crafting.BlockRecipeSerializer;
 
@@ -61,13 +60,13 @@ public class CannonCastingRecipe implements BlockRecipe {
 	@Override public ResourceLocation getId() { return this.id; }
 	@Override public BlockRecipeSerializer<?> getSerializer() { return BlockRecipeSerializer.CANNON_CASTING.get(); }
 	
-	public static class Serializer extends ForgeRegistryEntry<BlockRecipeSerializer<?>> implements BlockRecipeSerializer<CannonCastingRecipe> {
+	public static class Serializer implements BlockRecipeSerializer<CannonCastingRecipe> {
 		@Override
 		public CannonCastingRecipe fromJson(ResourceLocation id, JsonObject obj) {
 			CannonCastShape shape = CannonCastShape.byId(new ResourceLocation(obj.get("cast_shape").getAsString()));
 			FluidIngredient ingredient = FluidIngredient.deserialize(obj.get("fluid"));
 			int castingTime = obj.get("casting_time").getAsInt();
-			Block result = ForgeRegistries.BLOCKS.getValue(new ResourceLocation(obj.get("result").getAsString()));
+			Block result = Registry.BLOCK.get(new ResourceLocation(obj.get("result").getAsString()));
 			return new CannonCastingRecipe(shape, ingredient, result, castingTime, id);
 		}
 
@@ -75,7 +74,7 @@ public class CannonCastingRecipe implements BlockRecipe {
 		public CannonCastingRecipe fromNetwork(ResourceLocation id, FriendlyByteBuf buf) {
 			CannonCastShape shape = CannonCastShape.byId(buf.readResourceLocation());
 			int castingTime = buf.readVarInt();
-			Block result = buf.readRegistryIdUnsafe(ForgeRegistries.BLOCKS);
+			Block result = Registry.BLOCK.get(buf.readResourceLocation());
 			FluidIngredient ingredient = FluidIngredient.read(buf);
 			return new CannonCastingRecipe(shape, ingredient, result, castingTime, id);
 		}
@@ -84,7 +83,7 @@ public class CannonCastingRecipe implements BlockRecipe {
 		public void toNetwork(FriendlyByteBuf buf, CannonCastingRecipe recipe) {
 			buf.writeResourceLocation(recipe.shape().name())
 			.writeVarInt(recipe.castingTime())
-			.writeRegistryIdUnsafe(ForgeRegistries.BLOCKS, recipe.getResultBlock());
+			.writeResourceLocation(Registry.BLOCK.getKey(recipe.getResultBlock()));
 			recipe.ingredient().write(buf);
 		}
 	}

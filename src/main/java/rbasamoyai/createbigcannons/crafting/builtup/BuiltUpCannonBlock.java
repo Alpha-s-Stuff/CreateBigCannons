@@ -2,6 +2,7 @@ package rbasamoyai.createbigcannons.crafting.builtup;
 
 import com.simibubi.create.foundation.block.ITE;
 
+import net.fabricmc.fabric.api.block.BlockPickInteractionAware;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.player.Player;
@@ -24,7 +25,7 @@ import rbasamoyai.createbigcannons.cannons.CannonMaterial;
 import rbasamoyai.createbigcannons.cannons.cannonend.CannonEnd;
 import rbasamoyai.createbigcannons.crafting.casting.CannonCastShape;
 
-public class BuiltUpCannonBlock extends DirectionalBlock implements ITE<LayeredCannonBlockEntity>, CannonBlock {
+public class BuiltUpCannonBlock extends DirectionalBlock implements ITE<LayeredCannonBlockEntity>, CannonBlock, BlockPickInteractionAware {
 	
 	public BuiltUpCannonBlock(Properties properties) {
 		super(properties);
@@ -64,7 +65,7 @@ public class BuiltUpCannonBlock extends DirectionalBlock implements ITE<LayeredC
 	@Override public BlockState mirror(BlockState state, Mirror mirror) { return state.setValue(FACING, mirror.mirror(state.getValue(FACING))); }
 	
 	@Override
-	public ItemStack getCloneItemStack(BlockState state, HitResult target, BlockGetter level, BlockPos pos, Player player) {
+	public ItemStack getPickedStack(BlockState state, BlockGetter level, BlockPos pos, Player player, HitResult target) {
 		return ItemStack.EMPTY;
 	}
 

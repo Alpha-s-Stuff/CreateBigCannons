@@ -7,7 +7,7 @@
   ],
   "key": {
     "I": {
-      "tag": "forge:ingots/cast_iron"
+      "tag": "c:ingots/cast_iron"
     },
     "S": {
       "tag": "minecraft:wooden_slabs"

@@ -24,6 +24,7 @@ import com.simibubi.create.foundation.utility.Iterate;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
@@ -41,7 +42,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
-import net.minecraftforge.registries.ForgeRegistries;
 import rbasamoyai.createbigcannons.CBCBlockEntities;
 import rbasamoyai.createbigcannons.CBCBlocks;
 import rbasamoyai.createbigcannons.cannons.CannonBehavior;
@@ -321,7 +321,7 @@ public class LayeredCannonBlockEntity extends SmartTileEntity implements ICannon
 		for (Map.Entry<CannonCastShape, Block> e : this.layeredBlocks.entrySet()) {
 			CompoundTag entryTag = new CompoundTag();
 			entryTag.putString("Shape", e.getKey().name().toString());
-			entryTag.putString("Block", ForgeRegistries.BLOCKS.getKey(e.getValue()).toString());
+			entryTag.putString("Block", Registry.BLOCK.getKey(e.getValue()).toString());
 			layerTag.add(entryTag);
 		}
 		tag.put("Layers", layerTag);
@@ -355,7 +355,7 @@ public class LayeredCannonBlockEntity extends SmartTileEntity implements ICannon
 		ListTag layers = tag.getList("Layers", Tag.TAG_COMPOUND);
 		for (int i = 0; i < layers.size(); ++i) {
 			CompoundTag entry = layers.getCompound(i);
-			this.layeredBlocks.put(CannonCastShape.byId(new ResourceLocation(entry.getString("Shape"))), ForgeRegistries.BLOCKS.getValue(new ResourceLocation(entry.getString("Block"))));
+			this.layeredBlocks.put(CannonCastShape.byId(new ResourceLocation(entry.getString("Shape"))), Registry.BLOCK.get(new ResourceLocation(entry.getString("Block"))));
 		}
 		this.layersConnectedTowards.clear();
 		CompoundTag layerConnectionTag = tag.getCompound("LayerConnections");

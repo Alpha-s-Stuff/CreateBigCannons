@@ -1,5 +1,6 @@
 package rbasamoyai.createbigcannons.munitions.fuzes;
 
+import io.github.fabricators_of_create.porting_lib.util.NetworkUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -11,7 +12,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.network.NetworkHooks;
 import rbasamoyai.createbigcannons.CBCItems;
 import rbasamoyai.createbigcannons.munitions.FuzedCannonProjectile;
 
@@ -40,7 +40,7 @@ public class TimedFuzeItem extends FuzeItem implements MenuProvider {
 				tag.putInt("FuzeTimer", 20);
 			}
 			int timer = tag.getInt("FuzeTimer");
-			NetworkHooks.openGui((ServerPlayer) player, this, buf -> {
+			NetworkUtil.openGui((ServerPlayer) player, this, buf -> {
 				buf.writeVarInt(timer);
 				buf.writeItem(new ItemStack(this));
 			});

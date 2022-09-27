@@ -20,6 +20,10 @@ import com.simibubi.create.foundation.ponder.instruction.EmitParticlesInstructio
 import com.simibubi.create.foundation.utility.Pointing;
 import com.simibubi.create.foundation.utility.VecHelper;
 
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import io.github.fabricators_of_create.porting_lib.util.FluidStack;
+import io.github.fabricators_of_create.porting_lib.util.NBTSerializer;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -33,8 +37,6 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.IFluidHandler.FluidAction;
 import rbasamoyai.createbigcannons.CBCBlocks;
 import rbasamoyai.createbigcannons.CBCFluids;
 import rbasamoyai.createbigcannons.CBCItems;
@@ -317,7 +319,7 @@ public class CannonCraftingScenes {
 		Selection deployer = util.select.position(deployerPos);
 		scene.overlay.showControls(new InputWindowElement(util.vector.topOf(deployerPos), Pointing.DOWN).withItem(breechblock), 40);
 		scene.idle(30);
-		scene.world.modifyTileNBT(deployer, DeployerTileEntity.class, tag -> tag.put("HeldItem", breechblock.serializeNBT()));
+		scene.world.modifyTileNBT(deployer, DeployerTileEntity.class, tag -> tag.put("HeldItem", NBTSerializer.serializeNBT(breechblock)));
 		scene.idle(15);
 		
 		scene.world.setKineticSpeed(deployerGearDown, -16);
@@ -328,7 +330,7 @@ public class CannonCraftingScenes {
 		scene.world.modifyBlock(incompletePos, copyPropertyTo(FACING, CBCBlocks.CAST_IRON_SLIDING_BREECH.getDefaultState().setValue(ALONG_FIRST, true)), false);
 		
 		scene.idle(10);
-		scene.world.modifyTileNBT(deployer, DeployerTileEntity.class, tag -> tag.put("HeldItem", ItemStack.EMPTY.serializeNBT()));
+		scene.world.modifyTileNBT(deployer, DeployerTileEntity.class, tag -> tag.put("HeldItem", NBTSerializer.serializeNBT(ItemStack.EMPTY)));
 		scene.world.setKineticSpeed(deployerGearDown, 16);
 		scene.world.setKineticSpeed(deployerGearUp, -32);
 		scene.world.moveDeployer(deployerPos, -1, 25);
@@ -386,8 +388,8 @@ public class CannonCraftingScenes {
 		scene.world.propagatePipeChange(util.grid.at(2, 2, 2));
 		scene.idle(20);
 		
-		scene.world.modifyTileEntity(util.grid.at(3, 1, 2), FluidTankTileEntity.class, tank -> tank.getTankInventory()
-				.fill(new FluidStack(CBCFluids.MOLTEN_CAST_IRON.get(), 8000), FluidAction.EXECUTE));
+		scene.world.modifyTileEntity(util.grid.at(3, 1, 2), FluidTankTileEntity.class, tank -> TransferUtil.insertFluid(tank.getTankInventory()
+				, new FluidStack(CBCFluids.MOLTEN_CAST_IRON.get(), FluidConstants.BLOCK * 8)));
 		scene.idle(20);
 		
 		scene.markAsFinished();
