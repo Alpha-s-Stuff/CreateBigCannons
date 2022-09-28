@@ -12,6 +12,7 @@ public class FuzeItemHandler extends SingleStackStorage {
 	public FuzeItemHandler(FuzedBlockEntity be) {
 		this.be = be;
 	}
+
 	@Override public ItemStack getStack() { return this.be.getFuze(); }
 
 	@Override
