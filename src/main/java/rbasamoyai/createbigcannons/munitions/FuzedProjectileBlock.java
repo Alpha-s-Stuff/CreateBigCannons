@@ -21,6 +21,8 @@ import net.minecraft.world.phys.BlockHitResult;
 import rbasamoyai.createbigcannons.CBCBlockEntities;
 import rbasamoyai.createbigcannons.munitions.fuzes.FuzeItem;
 
+import java.util.Optional;
+
 public abstract class FuzedProjectileBlock extends ProjectileBlock implements ITE<FuzedBlockEntity> {
 
 	protected FuzedProjectileBlock(Properties properties) {
@@ -34,7 +36,7 @@ public abstract class FuzedProjectileBlock extends ProjectileBlock implements IT
 		if (blockEntity == null) return ItemStack.EMPTY;
 		Direction facing = blockEntity.getBlockState().getValue(FACING);
 		Storage<ItemVariant> items = TransferUtil.getItemStorage(blockEntity, facing);
-		return TransferUtil.getItems(items, 1).get(0);
+		return Optional.ofNullable(TransferUtil.getItems(items, 1).get(0)).orElse(ItemStack.EMPTY);
 	}
 	
 	@Override
