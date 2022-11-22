@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.tterrag.registrate.util.nullness.NonNullSupplier;
 
+import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import rbasamoyai.createbigcannons.base.CBCCommonEvents;
@@ -18,9 +19,11 @@ import rbasamoyai.createbigcannons.base.CBCRegistries;
 import rbasamoyai.createbigcannons.config.CBCConfigs;
 import rbasamoyai.createbigcannons.crafting.BlockRecipeFinder;
 import rbasamoyai.createbigcannons.crafting.BlockRecipeSerializer;
+import rbasamoyai.createbigcannons.crafting.BlockRecipeType;
 import rbasamoyai.createbigcannons.crafting.BlockRecipesManager;
 import rbasamoyai.createbigcannons.crafting.CBCRecipeTypes;
 import rbasamoyai.createbigcannons.crafting.casting.CannonCastShape;
+import rbasamoyai.createbigcannons.munitions.fluidshell.FluidBlob;
 import rbasamoyai.createbigcannons.network.CBCNetwork;
 
 import javax.annotation.Nullable;
@@ -45,11 +48,12 @@ public class CreateBigCannons implements ModInitializer {
 		CBCFluids.register();
 		CBCRecipeTypes.register();
 		
-		CannonCastShape.register();
+		CannonCastShape.CANNON_CAST_SHAPES.register(modEventBus);
 		CBCContraptionTypes.prepare();
 		CBCChecks.register();
 		BlockRecipeSerializer.register();
-		
+		BlockRecipeType.register();
+
 		CBCParticleTypes.PARTICLE_TYPES.register();
 		
 		CBCTags.register();
@@ -61,7 +65,10 @@ public class CreateBigCannons implements ModInitializer {
 		CBCCommonEvents.register();
 		
 		CBCConfigs.registerConfigs();
+		
+		this.registerSerializers();
 
+		DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> CreateBigCannonsClient.prepareClient(modEventBus, forgeEventBus));
 		REGISTRATE.get().register();
 	}
 	
@@ -90,4 +97,8 @@ public class CreateBigCannons implements ModInitializer {
 		return new ResourceLocation(MOD_ID, path);
 	}
 	
+	private void registerSerializers() {
+		EntityDataSerializers.registerSerializer(FluidBlob.FLUID_STACK_SERIALIZER);
+	}
+
 }

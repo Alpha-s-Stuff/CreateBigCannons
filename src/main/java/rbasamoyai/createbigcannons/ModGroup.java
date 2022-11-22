@@ -6,6 +6,7 @@ import io.github.fabricators_of_create.porting_lib.util.LazyItemGroup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
+import rbasamoyai.createbigcannons.munitions.fuzes.ProximityFuzeItem;
 import rbasamoyai.createbigcannons.munitions.fuzes.TimedFuzeItem;
 
 public class ModGroup {
@@ -62,8 +63,10 @@ public class ModGroup {
 				CBCBlocks.HE_SHELL.asStack(),
 				CBCBlocks.AP_SHELL.asStack(),
 				CBCBlocks.SHRAPNEL_SHELL.asStack(),
+				CBCBlocks.FLUID_SHELL.asStack(),
 				CBCItems.IMPACT_FUZE.asStack(),
 				TimedFuzeItem.getCreativeTabItem(20),
+				ProximityFuzeItem.getCreativeTabItem(1),
 				
 				CBCItems.CANNON_CRAFTING_WAND.asStack(),
 				CBCBlocks.CASTING_SAND.asStack(),
@@ -140,7 +143,11 @@ public class ModGroup {
 				CBCBlocks.CAST_IRON_BLOCK.asStack(),
 				CBCItems.NETHERSTEEL_NUGGET.asStack(),
 				CBCItems.NETHERSTEEL_INGOT.asStack(),
-				CBCBlocks.NETHERSTEEL_BLOCK.asStack()));
+				CBCBlocks.NETHERSTEEL_BLOCK.asStack(),
+				
+				CBCItems.RAM_ROD.asStack(),
+				CBCItems.WORM.asStack(),
+				CBCBlocks.CANNON_CARRIAGE.asStack()));
 		}
 	};
 	

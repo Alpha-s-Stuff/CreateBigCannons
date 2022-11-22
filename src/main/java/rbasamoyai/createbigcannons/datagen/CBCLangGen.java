@@ -4,7 +4,6 @@ import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.tterrag.registrate.util.entry.BlockEntry;
 import com.tterrag.registrate.util.entry.ItemEntry;
 import com.tterrag.registrate.util.entry.ItemProviderEntry;
-
 import net.minecraft.resources.ResourceLocation;
 import rbasamoyai.createbigcannons.CBCBlocks;
 import rbasamoyai.createbigcannons.CBCItems;
@@ -24,7 +23,8 @@ public class CBCLangGen {
 		REGISTRATE.addLang("death.attack", CreateBigCannons.resource("shrapnel"), "player", "%s was ripped up by shrapnel");
 		REGISTRATE.addLang("death.attack", CreateBigCannons.resource("grapeshot"), "%s was blown out by grapeshot");
 		REGISTRATE.addLang("death.attack", CreateBigCannons.resource("grapeshot"), "player", "%s was blown out by grapeshot");
-		REGISTRATE.addRawLang(CreateBigCannons.MOD_ID + ".gui.set_timed_fuze.time", "Fuze Time: %s s %s ticks");
+		REGISTRATE.addRawLang(CreateBigCannons.MOD_ID + ".gui.set_timed_fuze.time", "Fuze Time: %ss %s ticks");
+		REGISTRATE.addRawLang(CreateBigCannons.MOD_ID + ".gui.set_proximity_fuze.distance", "Detonation Distance: %s blocks");
 		
 		tooltip(CBCBlocks.SOLID_SHOT)
 		.header("SOLID SHOT")
@@ -50,6 +50,13 @@ public class CBCLangGen {
 		.summary("Can effectively _pierce through blocks_, detonating inside protected structures.")
 		.conditionAndBehavior("On Detonation", "Explodes.");
 		
+		tooltip(CBCBlocks.FLUID_SHELL)
+		.header("FLUID SHELL")
+		.summary("Spreads the contained fluid all over the targeted area, with _different effects depending on the fluid_.")
+		.conditionAndBehavior("On Detonation", "Releases its contents.")
+		.conditionAndBehavior("Filling", "The shell can only be filled through _the same face that the fuze is placed on._ If a fuze is present, the shell _cannot be filled._")
+		.conditionAndBehavior("Note", "Some fluids may not have any effect on release. Supported fluids include, but may not be limited to, _water, lava, and liquid potions._");
+		
 		tooltip(CBCItems.IMPACT_FUZE)
 		.header("IMPACT FUZE")
 		.summary("Detonates when the projectile _hits something_. Due to its _simplicity_, it does not always detonate on impact.")
@@ -57,6 +64,7 @@ public class CBCLangGen {
 		
 		REGISTRATE.addLang("item", CBCItems.IMPACT_FUZE.getId(), "tooltip.chance", "Impact Chance");
 		REGISTRATE.addLang("item", CBCItems.IMPACT_FUZE.getId(), "tooltip.chance.value", "Upon impact this fuze has a _%s%%_ chance to detonate.");
+		REGISTRATE.addLang("item", CBCItems.IMPACT_FUZE.getId(), "tooltip.shell_info", "Impact Chance: _%s%%_");
 		
 		tooltip(CBCItems.TIMED_FUZE)
 		.header("TIMED FUZE")
@@ -64,9 +72,52 @@ public class CBCLangGen {
 		.conditionAndBehavior("When R-Clicked", "Opens the _Set Timed Fuze_ menu, where the fuze duration can be set.")
 		.conditionAndBehavior("Detonation", "The fuze detonates after the projectile has been in the world for the set time.");
 		
+		REGISTRATE.addLang("item", CBCItems.TIMED_FUZE.getId(), "tooltip.shell_info", "Time to Detonate: _%ss %s ticks_");
+		
+		tooltip(CBCItems.PROXIMITY_FUZE)
+		.header("PROXIMITY FUZE")
+		.summary("Detonates when it _gets close_ to a block.")
+		.conditionAndBehavior("When R-Clicked", "Opens the _Set Proximity Fuze_ menu, where the detonation distance can be set.")
+		.conditionAndBehavior("Detonation", "The fuze detonates after the projectile gets is within the set range of a block.");
+		
+		REGISTRATE.addLang("item", CBCItems.PROXIMITY_FUZE.getId(), "tooltip.shell_info", "Detonation Distance: _%s blocks_");
+		
 		tooltip(CBCItems.CANNON_CRAFTING_WAND)
 		.header("CANNON CRAFTING WAND")
 		.summary("Use on various cannon crafting processes such as _casting, boring, assembly,_ and _heating_ to _instantly finish_ the process.");
+		
+		tooltip(CBCItems.RAM_ROD)
+		.header("RAM ROD")
+		.summary("Used for _manually loading a cannon_ instead of using the Cannon Loader contraption. _Consumes saturation and hunger points_, with more for every block pushed.")
+		.controlAndAction("R-Click on Cannon Block", "Pushes munition blocks further into the cannon. Can push munition blocks out if applicable.")
+		.controlAndAction("R-Click on a Munition Block", "Pushes munition blocks. A string of munition blocks _must be connected to a valid cannon block_ to be pushed.");
+
+		tooltip(CBCBlocks.CANNON_CARRIAGE)
+		.header("CANNON_CARRIAGE")
+		.summary("_Mobile_ cannon mount. Can be _moved around_, but _cannot be automated_ like the Cannon Mount.");
+
+		REGISTRATE.addLang("block", CBCBlocks.CANNON_CARRIAGE.getId(), "tooltip.keyPressed", "When [_%s_] held down");
+		REGISTRATE.addLang("block", CBCBlocks.CANNON_CARRIAGE.getId(), "tooltip.fireCannon", "_Fires cannon_ on carriage if present. _Repeatedly fires cannon_ if possible.");
+		REGISTRATE.addLang("block", CBCBlocks.CANNON_CARRIAGE.getId(), "tooltip.pitchMode", "The forward/backward keys _set pitch_ instead of moving the cannon.");
+
+		REGISTRATE.addLang("item", CBCItems.RAM_ROD.getId(), "tooltip.pushStrength", "Push Strength");
+		REGISTRATE.addLang("item", CBCItems.RAM_ROD.getId(), "tooltip.pushStrength.value", "Up to _%s blocks_");
+		REGISTRATE.addLang("item", CBCItems.RAM_ROD.getId(), "tooltip.reach", "Reach");
+		REGISTRATE.addLang("item", CBCItems.RAM_ROD.getId(), "tooltip.reach.value", "Up to _%s blocks_ inside a cannon");
+		REGISTRATE.addLang("item", CBCItems.RAM_ROD.getId(), "tooltip.deployerCanUse", "Can Be Used by Deployers");
+		REGISTRATE.addLang("item", CBCItems.RAM_ROD.getId(), "tooltip.deployerCanUse.yes", "_Yes_");
+		REGISTRATE.addLang("item", CBCItems.RAM_ROD.getId(), "tooltip.deployerCanUse.no", "_No_");
+		
+		tooltip(CBCItems.WORM)
+		.header("WORM")
+		.summary("Used for _manually extracting munitions from a cannon_ instead of using the Cannon Loader Contraption. _Consumes saturation and hunger points._")
+		.controlAndAction("R-Click on Cannon Block", "Pulls munition blocks towards the end of the cannon. Can only pull one block at a time.");
+		
+		REGISTRATE.addLang("item", CBCItems.WORM.getId(), "tooltip.reach", "Reach");
+		REGISTRATE.addLang("item", CBCItems.WORM.getId(), "tooltip.reach.value", "Up to _%s blocks_ inside a cannon");
+		REGISTRATE.addLang("item", CBCItems.WORM.getId(), "tooltip.deployerCanUse", "Can Be Used by Deployers");
+		REGISTRATE.addLang("item", CBCItems.WORM.getId(), "tooltip.deployerCanUse.yes", "_Yes_");
+		REGISTRATE.addLang("item", CBCItems.WORM.getId(), "tooltip.deployerCanUse.no", "_No_");
 		
 		REGISTRATE.addLang("block", CreateBigCannons.resource("cannon"), "tooltip.materialProperties", "Cannon Properties");
 		REGISTRATE.addLang("block", CreateBigCannons.resource("cannon"), "tooltip.strength", "Strength");
@@ -87,6 +138,21 @@ public class CBCLangGen {
 		REGISTRATE.addLang("exception", CreateBigCannons.resource("cannon_drill"), "tooltip.none", "The cannon drill did not fail, this should not be displaying");
 		
 		REGISTRATE.addLang("block", CreateBigCannons.resource("incomplete_block"), "tooltip.requiredParts", "This block requires the following parts:");
+		
+		REGISTRATE.addLang("recipe", CreateBigCannons.resource("melting"), "Basin Melting");
+		REGISTRATE.addLang("recipe", CreateBigCannons.resource("cannon_casting"), "Cannon Casting");
+		REGISTRATE.addLang("recipe", CreateBigCannons.resource("built_up_heating"), "Cannon Building");
+		REGISTRATE.addLang("recipe", CreateBigCannons.resource("cannon_boring"), "Cannon Boring");
+		REGISTRATE.addLang("recipe", CreateBigCannons.resource("incomplete_cannon_blocks"), "Incomplete Cannon Blocks");
+		
+		REGISTRATE.addLang("recipe", CreateBigCannons.resource("added_casting_time"), "Added casting time: %ss");
+		
+		REGISTRATE.addLang("block", CreateBigCannons.resource("shell"), "tooltip.fuze", "Fuze:");
+		REGISTRATE.addLang("block", CreateBigCannons.resource("shell"), "tooltip.fuze.none", "(none)");
+
+		REGISTRATE.addLang("key", CreateBigCannons.resource("category"), "Create Big Cannons");
+		REGISTRATE.addLang("key", CreateBigCannons.resource("pitch_mode"), "Change Carriage Mode");
+		REGISTRATE.addLang("key", CreateBigCannons.resource("fire_controlled_cannon"), "Fire Controlled Cannon");
 	}
 	
 	private static class TooltipBuilder {

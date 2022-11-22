@@ -2,8 +2,8 @@
   "type": "create:compacting",
   "ingredients": [
     {
-      "fluidTag": "c:molten_steel",
-      "amount": 144
+      "fluidTag": "forge:molten_steel",
+      "amount": 90
     }
   ],
   "results": [

@@ -5,6 +5,9 @@ import com.simibubi.create.content.contraptions.base.DirectionalAxisKineticBlock
 import com.simibubi.create.foundation.data.BlockStateGen;
 import com.tterrag.registrate.builders.BlockBuilder;
 import com.tterrag.registrate.builders.ItemBuilder;
+import com.tterrag.registrate.providers.loot.RegistrateBlockLootTables;
+import com.tterrag.registrate.util.nullness.NonNullBiConsumer;
+import com.tterrag.registrate.util.nullness.NonNullFunction;
 import com.tterrag.registrate.util.nullness.NonNullUnaryOperator;
 
 import net.minecraft.client.renderer.RenderType;
@@ -15,9 +18,22 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.level.material.MaterialColor;
+import net.minecraft.world.level.storage.loot.LootPool;
+import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.level.storage.loot.entries.LootItem;
+import net.minecraft.world.level.storage.loot.entries.TagEntry;
+import net.minecraft.world.level.storage.loot.functions.CopyNameFunction;
+import net.minecraft.world.level.storage.loot.functions.CopyNbtFunction;
+import net.minecraft.world.level.storage.loot.functions.SetItemCountFunction;
+import net.minecraft.world.level.storage.loot.providers.nbt.ContextNbtProvider;
+import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
+import net.minecraftforge.client.model.generators.BlockModelBuilder;
+import rbasamoyai.createbigcannons.CBCItems;
 import rbasamoyai.createbigcannons.CBCTags;
 import rbasamoyai.createbigcannons.CreateBigCannons;
 import rbasamoyai.createbigcannons.cannonloading.CannonLoaderGen;
+import rbasamoyai.createbigcannons.cannonmount.carriage.CannonCarriageBlock;
+import rbasamoyai.createbigcannons.cannonmount.carriage.CannonCarriageBlockItem;
 import rbasamoyai.createbigcannons.cannons.CannonBlock;
 import rbasamoyai.createbigcannons.cannons.CannonBlockItem;
 import rbasamoyai.createbigcannons.cannons.cannonend.SlidingBreechBlockGen;
@@ -252,17 +268,24 @@ public class CBCBuilderTransformers {
 	}
 	
 	public static <T extends Block, P> NonNullUnaryOperator<BlockBuilder<T, P>> projectile(String pathAndMaterial) {
-		ResourceLocation baseLoc = CreateBigCannons.resource("block/projectile_block");
+		return projectile(pathAndMaterial, true);
+	}
+	
+	public static <T extends Block, P> NonNullUnaryOperator<BlockBuilder<T, P>> projectile(String pathAndMaterial, boolean useStandardModel) {
+		ResourceLocation baseLoc = CreateBigCannons.resource(String.format("block/%sprojectile_block", useStandardModel ? "standard_" : ""));
 		ResourceLocation sideLoc = CreateBigCannons.resource("block/" + pathAndMaterial);
 		ResourceLocation topLoc = CreateBigCannons.resource("block/" + pathAndMaterial + "_top");
 		ResourceLocation bottomLoc = CreateBigCannons.resource("block/" + pathAndMaterial + "_bottom");
 		return b -> b.properties(p -> p.noOcclusion())
 				.addLayer(() -> RenderType::solid)
-				.blockstate((c, p) -> p.directionalBlock(c.get(), p.models().withExistingParent(c.getName(), baseLoc)
+				.blockstate((c, p) -> {
+					BlockModelBuilder builder = p.models().withExistingParent(c.getName(), baseLoc)
 						.texture("side", sideLoc)
 						.texture("top", topLoc)
-						.texture("bottom", bottomLoc)
-						.texture("particle", topLoc)));
+						.texture("particle", topLoc);
+					if (!useStandardModel) builder.texture("bottom", bottomLoc);
+					p.directionalBlock(c.get(), builder);
+				});
 	}
 	
 	public static <T extends Block, P> NonNullUnaryOperator<BlockBuilder<T, P>> powderCharge() {
@@ -293,7 +316,18 @@ public class CBCBuilderTransformers {
 				.model((c, p) -> p.getBuilder(c.getName()).parent(p.getExistingFile(itemModelLoc)))
 				.build();
 	}
-	
+
+	public static <T extends Block, P> NonNullUnaryOperator<BlockBuilder<T, P>> cannonCarriage() {
+		ResourceLocation blockLoc = CreateBigCannons.resource("block/cannon_carriage/block");
+		ResourceLocation saddleLoc = CreateBigCannons.resource("block/cannon_carriage/block_saddle");
+		return b -> b.properties(p -> p.noOcclusion())
+				.addLayer(() -> RenderType::cutoutMipped)
+				.blockstate((c, p) -> p.horizontalBlock(c.get(), s -> p.models().getExistingFile(s.getValue(CannonCarriageBlock.SADDLED) ? saddleLoc : blockLoc)))
+				.item(CannonCarriageBlockItem::new)
+				.model((c, p) -> p.getBuilder(c.getName()).parent(p.getExistingFile(blockLoc)))
+				.build();
+	}
+
 	public static <T extends Block, P> NonNullUnaryOperator<BlockBuilder<T, P>> invisibleWithParticle(String path) {
 		return b -> b.blockstate((c, p) -> p.simpleBlock(c.get(), p.models().getBuilder(c.getName())
 				.texture("particle", CreateBigCannons.resource(path))));
@@ -334,6 +368,36 @@ public class CBCBuilderTransformers {
 				.item()
 				.model((c, p) -> p.getBuilder(c.getName()).parent(p.getExistingFile(baseLoc)))
 				.build();
+	}
+	
+	public static <T extends Block> NonNullBiConsumer<RegistrateBlockLootTables, T> castIronScrapLoot(int count) {
+		return (t, u) -> t.add(u, LootTable.lootTable().withPool(LootPool.lootPool().add(LootItem.lootTableItem(CBCItems.CAST_IRON_NUGGET.get()).apply(SetItemCountFunction.setCount(ConstantValue.exactly(count))))));
+	}
+
+	public static <T extends Block> NonNullBiConsumer<RegistrateBlockLootTables, T> bronzeScrapLoot(int count) {
+		return (t, u) -> t.add(u, LootTable.lootTable().withPool(LootPool.lootPool().add(TagEntry.expandTag(CBCTags.ItemCBC.NUGGET_BRONZE).apply(SetItemCountFunction.setCount(ConstantValue.exactly(count))))));
+	}
+	
+	public static <T extends Block> NonNullBiConsumer<RegistrateBlockLootTables, T> steelScrapLoot(int count) {
+		return (t, u) -> t.add(u, LootTable.lootTable().withPool(LootPool.lootPool().add(TagEntry.expandTag(CBCTags.ItemCBC.NUGGET_STEEL).apply(SetItemCountFunction.setCount(ConstantValue.exactly(count))))));
+	}
+	
+	public static <T extends Block> NonNullBiConsumer<RegistrateBlockLootTables, T> nethersteelScrapLoot(int count) {
+		return (t, u) -> t.add(u, LootTable.lootTable().withPool(LootPool.lootPool().add(LootItem.lootTableItem(CBCItems.NETHERSTEEL_NUGGET.get()).apply(SetItemCountFunction.setCount(ConstantValue.exactly(count))))));
+	}
+	
+	public static <T extends Block> NonNullBiConsumer<RegistrateBlockLootTables, T> shellLoot(NonNullFunction<CopyNbtFunction.Builder, CopyNbtFunction.Builder> additionalCopyData) {
+		return (t, u) -> t.add(u, LootTable.lootTable()
+			.withPool(LootPool.lootPool()
+				.setRolls(ConstantValue.exactly(1.0f))
+				.add(LootItem.lootTableItem(u)
+					.apply(CopyNameFunction.copyName(CopyNameFunction.NameSource.BLOCK_ENTITY))
+					.apply(additionalCopyData.apply(CopyNbtFunction.copyData(ContextNbtProvider.BLOCK_ENTITY)
+						.copy("Fuze", "BlockEntityTag.Fuze"))))));
+	}
+	
+	public static <T extends Block> NonNullBiConsumer<RegistrateBlockLootTables, T> shellLoot() {
+		return shellLoot(t -> t);
 	}
 	
 }

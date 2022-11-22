@@ -15,6 +15,7 @@ import com.simibubi.create.content.contraptions.components.structureMovement.bea
 import com.simibubi.create.content.contraptions.components.structureMovement.bearing.MechanicalBearingTileEntity;
 import com.simibubi.create.content.contraptions.components.structureMovement.piston.MechanicalPistonBlock.PistonState;
 import com.simibubi.create.foundation.block.ITE;
+import com.simibubi.create.foundation.fluid.SmartFluidTank;
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.utility.Lang;
 import com.simibubi.create.foundation.utility.ServerSpeedProvider;
@@ -31,7 +32,9 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
+import net.minecraft.nbt.StringTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -42,6 +45,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
@@ -56,9 +60,13 @@ import net.minecraft.world.phys.Vec3;
 import rbasamoyai.createbigcannons.CBCBlocks;
 import rbasamoyai.createbigcannons.CBCTags;
 import rbasamoyai.createbigcannons.CreateBigCannons;
+import rbasamoyai.createbigcannons.base.CBCRegistries;
 import rbasamoyai.createbigcannons.base.PoleContraption;
 import rbasamoyai.createbigcannons.base.PoleMoverBlockEntity;
 import rbasamoyai.createbigcannons.cannons.CannonBlock;
+import rbasamoyai.createbigcannons.cannons.ICannonBlockEntity;
+import rbasamoyai.createbigcannons.crafting.builtup.LayeredCannonBlockEntity;
+import rbasamoyai.createbigcannons.crafting.casting.CannonCastShape;
 import rbasamoyai.createbigcannons.network.CBCNetwork;
 import rbasamoyai.createbigcannons.network.ClientboundUpdateContraptionPacket;
 
@@ -71,21 +79,15 @@ public class CannonDrillBlockEntity extends PoleMoverBlockEntity implements Flui
 	protected FailureReason failureReason = FailureReason.NONE;
 	protected FluidTank lubricant;
 	
+	private static final int SYNC_RATE = 8;
+	protected boolean queuedSync;
+	protected int syncCooldown;
+
 	public CannonDrillBlockEntity(BlockEntityType<? extends CannonDrillBlockEntity> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
-		this.lubricant = new FluidTank(FluidConstants.BLOCK) {
-			@Override
-			protected boolean canInsert(FluidVariant fs) {
-				return fs.getFluid() == Fluids.WATER;
-			}
-
-			@Override
-			protected boolean canExtract(FluidVariant fs) {
-				return fs.getFluid() == Fluids.WATER;
-			}
-		};
+		this.lubricant = new SmartFluidTank(FluidConstants.BLOCK, this::onFluidStackChanged).setValidator(fs -> fs.getFluid() == Fluids.WATER);
 	}
-
+	
 	@Override
 	public Storage<FluidVariant> getFluidStorage(Direction side) {
 		Direction facing = this.getBlockState().getValue(BlockStateProperties.FACING);
@@ -99,6 +101,23 @@ public class CannonDrillBlockEntity extends PoleMoverBlockEntity implements Flui
 			return this.lubricant;
 		}
 		return null;
+	}
+
+	protected void onFluidStackChanged(FluidStack newStack) {
+		if (this.hasLevel() && !this.level.isClientSide) {
+			this.notifyUpdate();
+		}
+	}
+
+	@Override
+	public void sendData() {
+		if (this.syncCooldown > 0) {
+			this.queuedSync = true;
+			return;
+		}
+		super.sendData();
+		this.queuedSync = false;
+		this.syncCooldown = SYNC_RATE;
 	}
 
 	@Override
@@ -150,14 +169,17 @@ public class CannonDrillBlockEntity extends PoleMoverBlockEntity implements Flui
 		if (movementDirection.getAxisDirection() == Direction.AxisDirection.POSITIVE) {
 			gridPos = gridPos.relative(movementDirection);
 		}
-		
+		gridPos = gridPos.relative(movementDirection.getOpposite());
+
 		Direction facing = contraption.orientation();
 		Direction positive = Direction.fromAxisAndDirection(facing.getAxis(), Direction.AxisDirection.POSITIVE);
 		Vec3 mask = (new Vec3(1, 1, 1)).subtract(positive.getStepX(), positive.getStepY(), positive.getStepZ());
 		BlockPos maskedPos = new BlockPos(pos.multiply(mask));
 		
+		AABB newBounds = bounds.expandTowards(new Vec3(facing.step()).scale(128)).inflate(2);
+
 		for (ControlledContraptionEntity other : this.level.getEntitiesOfClass(
-				ControlledContraptionEntity.class, bounds.inflate(1), e -> !e.equals(this.movedContraption))) {
+				ControlledContraptionEntity.class, newBounds, e -> !e.equals(this.movedContraption))) {
 			if (!(other.getContraption() instanceof BearingContraption lathe)) continue;
 			
 			AABB otherBounds = other.getBoundingBox();
@@ -204,150 +226,185 @@ public class CannonDrillBlockEntity extends PoleMoverBlockEntity implements Flui
 	}
 	
 	@Override
+	public void tick() {
+		if (!this.level.isClientSide && this.running && this.movedContraption != null && this.offset + this.getMovementSpeed() >= this.getExtensionRange()) {
+			this.collideWithContraptionToBore(null, false);
+		}
+
+		super.tick();
+
+		if (this.syncCooldown > 0) {
+			this.syncCooldown--;
+			if (this.syncCooldown == 0 && this.queuedSync) {
+				this.sendData();
+			}
+		}
+	}
+
+	@Override
 	protected boolean moveAndCollideContraption() {
 		if (super.moveAndCollideContraption()) {
-			this.collideWithContraptionToBore(); // We do a little extra processing :trol:
+			this.collideWithContraptionToBore(null, true);
 			this.boreSpeed = 0;
 			this.addedStressImpact = 0;
 			this.latheEntity = null;
 			return true;
 		}
-		
-		return this.collideWithContraptionToBore();
+		return false;
+	}
+
+	@Override
+	public void onSpeedChanged(float prevSpeed) {
+		super.onSpeedChanged(prevSpeed);
+		this.boreSpeed = 0;
+		this.addedStressImpact = 0;
+		this.latheEntity = null;
 	}
 	
-	private boolean collideWithContraptionToBore() {
+	public boolean collideWithContraptionToBore(ControlledContraptionEntity other, boolean collide) {
 		if (this.level.isClientSide) return false;
-		
+		if (other == null && this.latheEntity == null) return false;
+
 		CannonDrillingContraption drill = (CannonDrillingContraption) this.movedContraption.getContraption();
 		AABB bounds = this.movedContraption.getBoundingBox();
 		Vec3 pos = this.movedContraption.position();
 		BlockPos gridPos = new BlockPos(pos);
 		Vec3 motion = this.movedContraption.getDeltaMovement();
 		
+		if (drill == null || bounds == null) return false;
+
 		Direction facing = drill.orientation();
 		Direction positive = Direction.fromAxisAndDirection(facing.getAxis(), Direction.AxisDirection.POSITIVE);
 		Vec3 mask = (new Vec3(1, 1, 1)).subtract(positive.getStepX(), positive.getStepY(), positive.getStepZ());
 		BlockPos maskedPos = new BlockPos(pos.multiply(mask));
 		
-		if (drill == null || bounds == null) return false;
-		
-		Direction movementDirection = Direction.getNearest(motion.x, motion.y, motion.z);
-		if (movementDirection.getAxisDirection() == Direction.AxisDirection.POSITIVE) {
+		Direction movementDirection = collide ? drill.orientation() : Direction.getNearest(motion.x, motion.y, motion.z);
+		if (!collide && movementDirection.getAxisDirection() == Direction.AxisDirection.POSITIVE) {
 			gridPos = gridPos.relative(movementDirection);
 		}
-		
+		if (collide) {
+			gridPos = gridPos.relative(movementDirection.getOpposite());
+		}
+
 		boolean isBoringBlock = false;
 		
-		for (ControlledContraptionEntity other : this.level.getEntitiesOfClass(
-				ControlledContraptionEntity.class, bounds.inflate(1), e -> !e.equals(this.movedContraption))) {
-			if (!(other.getContraption() instanceof BearingContraption lathe)) continue;
-			
-			AABB otherBounds = other.getBoundingBox();
-			Direction otherFacing = lathe.getFacing();
-			Vec3 otherPosition = other.position();
-			
-			if (other.isPassenger() || otherBounds == null || !bounds.move(motion).intersects(otherBounds)) {
+		if (this.latheEntity == null) this.latheEntity = other;
+		if (!(this.latheEntity.getContraption() instanceof BearingContraption lathe)) {
+			this.stopBoringState();
+			return false;
+		}
+
+		AABB otherBounds = this.latheEntity.getBoundingBox();
+		Direction otherFacing = lathe.getFacing();
+		Vec3 otherPosition = this.latheEntity.position();
+
+		if (this.latheEntity.isPassenger() || otherBounds == null || !bounds.move(motion).intersects(otherBounds)) {
+			this.stopBoringState();
+			return false;
+		}
+
+		BlockPos otherMaskedPos = new BlockPos(this.latheEntity.getAnchorVec().multiply(mask));
+		if (!maskedPos.equals(otherMaskedPos) || otherFacing != facing.getOpposite() || movementDirection == otherFacing) {
+			this.stopBoringState();
+			return false;
+		}
+
+		BlockPos bearingPos = new BlockPos(this.latheEntity.getAnchorVec()).relative(facing);
+		if (!(this.level.getBlockEntity(bearingPos) instanceof MechanicalBearingTileEntity bearing)) {
+			this.stopBoringState();
+			return false;
+		}
+
+		for (BlockPos colliderPos : drill.getColliders(this.level, movementDirection)) {
+			StructureBlockInfo drillBlockInfo = drill.getBlocks().get(colliderPos);
+			BlockPos globalPos = colliderPos.offset(gridPos);
+			BlockPos otherColliderPos = globalPos.subtract(new BlockPos(otherPosition));
+			if (!lathe.getBlocks().containsKey(otherColliderPos)) continue;
+			if (!CBCBlocks.CANNON_DRILL_BIT.has(drillBlockInfo.state)) continue;
+
+			BlockPos boringOffset = globalPos.subtract(new BlockPos(otherPosition));
+			if (!lathe.getBlocks().containsKey(boringOffset)) continue;
+			StructureBlockInfo latheBlockInfo = lathe.getBlocks().get(boringOffset);
+
+			boolean isBoreable = latheBlockInfo.state.getBlock() instanceof TransformableByBoring;
+
+			if (!latheBlockInfo.state.is(CBCTags.BlockCBC.DRILL_CAN_PASS_THROUGH) && !isBoreable) {
+				this.tryFinishingBoring();
+				this.stopBoringState();
+				this.simulateStop();
+				return true;
+			}
+
+			BlockPos currentPos = collide || this.offset + this.getMovementSpeed() >= this.getExtensionRange() ? globalPos.relative(movementDirection) : globalPos;
+			if (this.boringPos == null) {
+				this.boringPos = currentPos;
+			} else if (!this.boringPos.equals(currentPos)) {
+				this.tryFinishingBoring();
+				this.boringPos = currentPos;
+			}
+
+			if (!isBoreable) {
+				this.boringPos = null;
+				this.boreSpeed = 0;
+				this.addedStressImpact = 0;
 				continue;
 			}
-			
-			BlockPos otherMaskedPos = new BlockPos(other.getAnchorVec().multiply(mask));
-			if (!maskedPos.equals(otherMaskedPos) || otherFacing != facing.getOpposite() || movementDirection == otherFacing) break;
-			
-			BlockPos bearingPos = new BlockPos(other.getAnchorVec()).relative(facing);
-			if (!(this.level.getBlockEntity(bearingPos) instanceof MechanicalBearingTileEntity bearing)) continue;
-			this.latheEntity = other;
-			
-			for (BlockPos colliderPos : drill.getColliders(this.level, movementDirection)) {
-				StructureBlockInfo drillBlockInfo = drill.getBlocks().get(colliderPos);
-				BlockPos globalPos = colliderPos.offset(gridPos);
-				BlockPos otherColliderPos = globalPos.subtract(new BlockPos(otherPosition));
-				if (!lathe.getBlocks().containsKey(otherColliderPos)) continue;
-				if (!CBCBlocks.CANNON_DRILL_BIT.has(drillBlockInfo.state)) continue;
-				
-				BlockPos boringOffset = globalPos.subtract(new BlockPos(otherPosition));
-				if (!lathe.getBlocks().containsKey(boringOffset)) continue;
-				StructureBlockInfo latheBlockInfo = lathe.getBlocks().get(boringOffset);
-				
-				boolean isBoreable = latheBlockInfo.state.getBlock() instanceof TransformableByBoring;
-				
-				if (!latheBlockInfo.state.is(CBCTags.BlockCBC.DRILL_CAN_PASS_THROUGH) && !isBoreable) {
-					this.tryFinishingBoring();
-					this.boreSpeed = 0;
-					this.addedStressImpact = 0;
-					this.latheEntity = null;
-					return true;
+
+			int drainSpeed = (int) Mth.abs(bearing.getSpeed() * 0.5f);
+			if (Math.abs(bearing.getSpeed()) > Math.abs(this.getSpeed())) {
+				this.failureReason = FailureReason.TOO_WEAK;
+			} else if (TransferUtil.extractAnyFluid(this.lubricant, drainSpeed).getAmount() < drainSpeed) {
+				if (this.level instanceof ServerLevel slevel) {
+					Vec3 particlePos = Vec3.atCenterOf(globalPos);
+					slevel.sendParticles(ParticleTypes.SMOKE, particlePos.x, particlePos.y, particlePos.z, 10, 0.0d, 1.0d, 0.0d, 0.1d);
 				}
-				
-				if (!isBoreable) {
-					this.boringPos = null;
-					this.boreSpeed = 0;
-					this.addedStressImpact = 0;
-					continue;
-				}
-				
-				if (this.boringPos == null) {
-					this.boringPos = globalPos;
-				} else if (!this.boringPos.equals(globalPos)) {
-					this.tryFinishingBoring();
-					this.boringPos = globalPos;
-				}
-				
-				int drainSpeed = (int) Mth.abs(bearing.getSpeed() * 0.5f);
-				if (Math.abs(bearing.getSpeed()) > Math.abs(this.getSpeed())) {
-					this.failureReason = FailureReason.TOO_WEAK;
-				} else if (TransferUtil.extractAnyFluid(this.lubricant, drainSpeed).getAmount() < drainSpeed) {
-					if (this.level instanceof ServerLevel slevel) {
-						Vec3 particlePos = Vec3.atCenterOf(globalPos);
-						slevel.sendParticles(ParticleTypes.SMOKE, particlePos.x, particlePos.y, particlePos.z, 10, 0.0d, 1.0d, 0.0d, 0.1d);
-					}
-					this.level.playSound(null, globalPos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 1.0f, 2f);
-					this.failureReason = FailureReason.DRY_BORE;
-				}
-				
-				if (this.failureReason != FailureReason.NONE) {
-					if (this.boreSpeed != 0) {
-						this.offset = (int) this.offset;
-						if (!this.boringPos.equals(globalPos)) --this.offset;
-					}
-					this.boringPos = null;
-					this.boreSpeed = 0;
-					this.addedStressImpact = 0;
-					return true;
-				}
-				this.failureReason = FailureReason.NONE;
-				
-				isBoringBlock = true;
-				
-				float weight = latheBlockInfo.state.getBlock() instanceof CannonBlock cBlock ? cBlock.getCannonMaterial().weight() : 1;
-				this.boreSpeed = bearing.getAngularSpeed() / 512f / (weight == 0 ? 1f : weight);
-				float fSpeed = Math.abs(this.boreSpeed);
-				this.boreSpeed = fSpeed * Math.signum(this.getSpeed());
-				this.addedStressImpact = weight;
-			
-				if (this.level.getGameTime() % 4 == 0) {
-					this.level.playSound(null, globalPos, SoundEvents.GRINDSTONE_USE, SoundSource.BLOCKS, 1.0f, Math.min(Math.abs(bearing.getSpeed()) / 128f, 2f));
-				}
-				
-				this.notifyUpdate();
-				break;
+				this.level.playSound(null, globalPos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 1.0f, 2f);
+				this.failureReason = FailureReason.DRY_BORE;
 			}
+
+			if (this.failureReason != FailureReason.NONE) {
+				if (this.boreSpeed != 0) {
+					this.offset = (int) this.offset;
+					if (!this.boringPos.equals(globalPos)) --this.offset;
+				}
+				this.stopBoringState();
+				return true;
+			}
+			this.failureReason = FailureReason.NONE;
+
+			isBoringBlock = true;
+
+			float weight = latheBlockInfo.state.getBlock() instanceof CannonBlock cBlock ? cBlock.getCannonMaterial().weight() : 1;
+			this.boreSpeed = bearing.getAngularSpeed() / 512f / (weight == 0 ? 1f : weight);
+			float fSpeed = Math.abs(this.boreSpeed);
+			this.boreSpeed = fSpeed * Math.signum(this.getSpeed());
+			this.addedStressImpact = weight;
+
+			if (this.level.getGameTime() % 4 == 0) {
+				this.level.playSound(null, globalPos, SoundEvents.GRINDSTONE_USE, SoundSource.BLOCKS, 1.0f, Math.min(Math.abs(bearing.getSpeed()) / 128f, 2f));
+			}
+
+			this.notifyUpdate();
 			break;
 		}
-		
-		if (!isBoringBlock) {
-			this.boringPos = null;
-			this.latheEntity = null;
-			this.boreSpeed = 0;
-			this.addedStressImpact = 0;
-		}
-		
-		return false;
+
+		if (!isBoringBlock) this.stopBoringState();
+
+		return true;
+	}
+
+	protected void stopBoringState() {
+		this.boringPos = null;
+		this.boreSpeed = 0;
+		this.addedStressImpact = 0;
+		this.latheEntity = null;
 	}
 	
-	@Override
-	public void tick() {
-		super.tick();
+	protected void simulateStop() {
+		this.movedContraption.setContraptionMotion(Vec3.ZERO);
+		this.offset = this.getGridOffset(this.offset);
+		this.resetContraptionToOffset();
+		this.collided();
 	}
 	
 	protected void tryFinishingBoring() {
@@ -359,14 +416,46 @@ public class CannonDrillBlockEntity extends PoleMoverBlockEntity implements Flui
 		
 		StructureBlockInfo latheBlockInfo = lathe.getBlocks().get(boringOffset);
 		if (!(latheBlockInfo.state.getBlock() instanceof TransformableByBoring unbored)) return;
-		
+		Direction facing = ((CannonDrillingContraption) this.movedContraption.getContraption()).orientation();
+
 		BlockState boredState = unbored.getBoredBlockState(latheBlockInfo.state);
 		if (latheBlockInfo.nbt != null && boredState.getBlock() instanceof ITE<?> boredBE) {
-			latheBlockInfo.nbt.putString("id", Registry.BLOCK_ENTITY_TYPE.getKey(boredBE.getTileEntityType()).toString());
+			BlockEntity be = boredBE.newBlockEntity(BlockPos.ZERO, boredState);
 			latheBlockInfo.nbt.putBoolean("JustBored", true);
+
+			if (boredState.getBlock() instanceof CannonBlock cBlock && be instanceof LayeredCannonBlockEntity layered) {
+				CannonCastShape shape = cBlock.getCannonShape();
+				CompoundTag layerConnectionsTag = new CompoundTag();
+				Direction opp = facing.getOpposite();
+
+				StructureBlockInfo nextBlockInfo = lathe.getBlocks().get(boringOffset.relative(facing));
+				if (nextBlockInfo != null && nextBlockInfo.nbt != null) {
+					BlockEntity be1 = BlockEntity.loadStatic(BlockPos.ZERO, nextBlockInfo.state, nextBlockInfo.nbt);
+					if (be1 instanceof LayeredCannonBlockEntity layered1 && layered1.isLayerConnectedTo(opp, shape)
+						|| be1 instanceof ICannonBlockEntity cbe1 && cbe1.cannonBehavior().isConnectedTo(opp)) {
+						ResourceLocation key = CBCRegistries.CANNON_CAST_SHAPES.get().getKey(cBlock.getCannonShape());
+						ListTag list = new ListTag();
+						list.add(StringTag.valueOf(key.toString()));
+						layerConnectionsTag.put(facing.getSerializedName(), list);
+					}
+				}
+				StructureBlockInfo prevBlockInfo = lathe.getBlocks().get(boringOffset.relative(opp));
+				if (prevBlockInfo != null && prevBlockInfo.nbt != null) {
+					BlockEntity be2 = BlockEntity.loadStatic(BlockPos.ZERO, prevBlockInfo.state, prevBlockInfo.nbt);
+					if (be2 instanceof LayeredCannonBlockEntity layered2 && layered2.isLayerConnectedTo(facing, shape)
+						|| be2 instanceof ICannonBlockEntity cbe2 && cbe2.cannonBehavior().isConnectedTo(facing)) {
+						ResourceLocation key = CBCRegistries.CANNON_CAST_SHAPES.get().getKey(cBlock.getCannonShape());
+						ListTag list = new ListTag();
+						list.add(StringTag.valueOf(key.toString()));
+						layerConnectionsTag.put(opp.getSerializedName(), list);
+					}
+				}
+
+				latheBlockInfo.nbt.put("LayerConnections", layerConnectionsTag);
+			}
 		}
 		
-		BlockPos bearingPos = new BlockPos(this.latheEntity.getAnchorVec()).relative(((CannonDrillingContraption) this.movedContraption.getContraption()).orientation());
+		BlockPos bearingPos = new BlockPos(this.latheEntity.getAnchorVec()).relative(facing);
 		if (!(this.level.getBlockEntity(bearingPos) instanceof MechanicalBearingTileEntity bearing)) return;
 		
 		StructureBlockInfo newInfo = new StructureBlockInfo(boringOffset, boredState, latheBlockInfo.nbt);

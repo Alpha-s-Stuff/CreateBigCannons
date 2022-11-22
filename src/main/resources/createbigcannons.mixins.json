@@ -5,9 +5,11 @@
 	"compatibilityLevel": "JAVA_8",
 	"refmap": "createbigcannons.refmap.json",
 	"mixins": [
-		"FixFluidTagIngredientMixin"
+		"FixFluidTagIngredientMixin",
+		"BearingCannonDrillFinderMixin"
 	],
 	"client": [
+		"CannonCarriagePoseMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

@@ -8,7 +8,10 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
 import rbasamoyai.createbigcannons.crafting.CannonCraftingWandItem;
 import rbasamoyai.createbigcannons.datagen.CBCBuilderTransformers;
+import rbasamoyai.createbigcannons.manualloading.RamRodItem;
+import rbasamoyai.createbigcannons.manualloading.WormItem;
 import rbasamoyai.createbigcannons.munitions.fuzes.ImpactFuzeItem;
+import rbasamoyai.createbigcannons.munitions.fuzes.ProximityFuzeItem;
 import rbasamoyai.createbigcannons.munitions.fuzes.TimedFuzeItem;
 
 public class CBCItems {
@@ -22,6 +25,7 @@ public class CBCItems {
 	
 	public static final ItemEntry<ImpactFuzeItem> IMPACT_FUZE = REGISTRATE.item("impact_fuze", ImpactFuzeItem::new).register();
 	public static final ItemEntry<TimedFuzeItem> TIMED_FUZE = REGISTRATE.item("timed_fuze", TimedFuzeItem::new).register();
+	public static final ItemEntry<ProximityFuzeItem> PROXIMITY_FUZE = REGISTRATE.item("proximity_fuze", ProximityFuzeItem::new).register();
 	
 	public static final ItemEntry<Item> CAST_IRON_SLIDING_BREECHBLOCK = REGISTRATE
 			.item("cast_iron_sliding_breechblock", Item::new)
@@ -57,7 +61,22 @@ public class CBCItems {
 	public static final ItemEntry<Item> NETHERSTEEL_INGOT = REGISTRATE.item("nethersteel_ingot", Item::new).register();
 	public static final ItemEntry<Item> NETHERSTEEL_NUGGET = REGISTRATE.item("nethersteel_nugget", Item::new).register();
 	
+	public static final ItemEntry<Item> BRONZE_SCRAP = REGISTRATE.item("bronze_scrap", Item::new).tag(CBCTags.ItemCBC.NUGGET_BRONZE).register();
+	public static final ItemEntry<Item> STEEL_SCRAP = REGISTRATE.item("steel_scrap", Item::new).tag(CBCTags.ItemCBC.NUGGET_STEEL).register();
+	
 	public static final ItemEntry<Item> SHOT_BALLS = REGISTRATE.item("shot_balls", Item::new).register();
+	
+	public static final ItemEntry<RamRodItem> RAM_ROD = REGISTRATE
+			.item("ram_rod", RamRodItem::new)
+			.properties(p -> p.stacksTo(1))
+			.model((c, p) -> p.getExistingFile(c.getId()))
+			.register();
+	
+	public static final ItemEntry<WormItem> WORM = REGISTRATE
+			.item("worm", WormItem::new)
+			.properties(p -> p.stacksTo(1))
+			.model((c, p) -> p.getExistingFile(c.getId()))
+			.register();
 	
 	static {
 		REGISTRATE.startSection(AllSections.CURIOSITIES);

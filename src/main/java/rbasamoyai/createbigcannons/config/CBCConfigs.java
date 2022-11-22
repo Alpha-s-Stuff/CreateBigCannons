@@ -9,6 +9,7 @@ import net.minecraftforge.api.ModLoadingContext;
 import net.minecraftforge.api.fml.event.config.ModConfigEvent;
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.simibubi.create.foundation.block.BlockStressValues;
 import com.simibubi.create.foundation.config.ConfigBase;
 
 import net.minecraftforge.common.ForgeConfigSpec;
@@ -49,6 +50,8 @@ public class CBCConfigs {
 		
 		for (Entry<ModConfig.Type, ConfigBase> pair : CONFIGS.entrySet())
 			ModLoadingContext.registerConfig(CreateBigCannons.MOD_ID, pair.getKey(), pair.getValue().specification);
+
+		BlockStressValues.registerProvider(CreateBigCannons.MOD_ID, SERVER.kinetics.stress);
 
 		ModConfigEvent.LOADING.register(CBCConfigs::onLoad);
 		ModConfigEvent.RELOADING.register(CBCConfigs::onReload);

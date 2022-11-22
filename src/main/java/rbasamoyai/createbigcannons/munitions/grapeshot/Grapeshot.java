@@ -1,13 +1,12 @@
 package rbasamoyai.createbigcannons.munitions.grapeshot;
 
-import io.github.fabricators_of_create.porting_lib.mixin.common.accessor.DamageSourceAccessor;
-import net.minecraft.tags.TagKey;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import rbasamoyai.createbigcannons.CBCTags;
 import rbasamoyai.createbigcannons.CreateBigCannons;
+import rbasamoyai.createbigcannons.config.CBCConfigs;
 import rbasamoyai.createbigcannons.munitions.shrapnel.Shrapnel;
 
 public class Grapeshot extends Shrapnel {
@@ -17,11 +16,12 @@ public class Grapeshot extends Shrapnel {
 	}
 	
 	@Override
-	protected TagKey<Block> getDestroyBlockTag() {
-		return CBCTags.BlockCBC.GRAPESHOT_SHATTERABLE;
+	protected boolean canDestroyBlock(BlockState state) {
+		return state.is(CBCTags.BlockCBC.GRAPESHOT_SHATTERABLE)
+			|| state.is(CBCTags.BlockCBC.GRAPESHOT_VULNERABLE) && this.random.nextFloat() < CBCConfigs.SERVER.munitions.grapeshotVulnerableBreakChance.getF();
 	}
 	
-	private static final DamageSource GRAPESHOT = DamageSourceAccessor.port_lib$init(CreateBigCannons.MOD_ID + ".grapeshot");
+	private static final DamageSource GRAPESHOT = new DamageSource(CreateBigCannons.MOD_ID + ".grapeshot");
 	@Override protected DamageSource getDamageSource() { return GRAPESHOT; }
 
 }

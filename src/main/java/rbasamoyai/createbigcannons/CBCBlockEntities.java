@@ -11,6 +11,7 @@ import rbasamoyai.createbigcannons.cannonmount.CannonMountInstance;
 import rbasamoyai.createbigcannons.cannonmount.YawControllerBlockEntity;
 import rbasamoyai.createbigcannons.cannonmount.YawControllerBlockEntityRenderer;
 import rbasamoyai.createbigcannons.cannonmount.YawControllerInstance;
+import rbasamoyai.createbigcannons.cannonmount.carriage.CannonCarriageBlockEntity;
 import rbasamoyai.createbigcannons.cannons.CannonBlockEntity;
 import rbasamoyai.createbigcannons.cannons.cannonend.CannonEndBlockEntity;
 import rbasamoyai.createbigcannons.cannons.cannonend.ScrewBreechBlockEntity;
@@ -32,6 +33,7 @@ import rbasamoyai.createbigcannons.crafting.incomplete.IncompleteCannonBlockEnti
 import rbasamoyai.createbigcannons.munitions.FuzedBlockEntity;
 import rbasamoyai.createbigcannons.munitions.FuzedBlockEntityRenderer;
 import rbasamoyai.createbigcannons.munitions.FuzedBlockInstance;
+import rbasamoyai.createbigcannons.munitions.fluidshell.FluidShellBlockEntity;
 
 public class CBCBlockEntities {
 
@@ -90,12 +92,24 @@ public class CBCBlockEntities {
 			.renderer(() -> YawControllerBlockEntityRenderer::new)
 			.validBlock(CBCBlocks.YAW_CONTROLLER)
 			.register();
-	
+
+	public static final BlockEntityEntry<CannonCarriageBlockEntity> CANNON_CARRIAGE = CreateBigCannons.registrate()
+			.tileEntity("cannon_carriage", CannonCarriageBlockEntity::new)
+			.validBlock(CBCBlocks.CANNON_CARRIAGE)
+			.register();
+
 	public static final BlockEntityEntry<FuzedBlockEntity> FUZED_BLOCK = CreateBigCannons.registrate()
 			.tileEntity("fuzed_block", FuzedBlockEntity::new)
 			.instance(() -> FuzedBlockInstance::new)
 			.renderer(() -> FuzedBlockEntityRenderer::new)
-			.validBlocks(CBCBlocks.HE_SHELL, CBCBlocks.SHRAPNEL_SHELL)
+			.validBlocks(CBCBlocks.HE_SHELL, CBCBlocks.SHRAPNEL_SHELL, CBCBlocks.AP_SHELL)
+			.register();
+	
+	public static final BlockEntityEntry<FluidShellBlockEntity> FLUID_SHELL = CreateBigCannons.registrate()
+			.tileEntity("fluid_shell", FluidShellBlockEntity::new)
+			.instance(() -> FuzedBlockInstance::new)
+			.renderer(() -> FuzedBlockEntityRenderer::new)
+			.validBlock(CBCBlocks.FLUID_SHELL)
 			.register();
 	
 	public static final BlockEntityEntry<CannonCastBlockEntity> CANNON_CAST = CreateBigCannons.registrate()
@@ -142,7 +156,7 @@ public class CBCBlockEntities {
 			.tileEntity("basin_foundry", BasinFoundryBlockEntity::new)
 			.validBlock(CBCBlocks.BASIN_FOUNDRY_LID)
 			.register();
-	
+
 	public static void register() {}
 	
 }

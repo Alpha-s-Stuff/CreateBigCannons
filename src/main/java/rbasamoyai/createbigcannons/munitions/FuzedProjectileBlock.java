@@ -16,32 +16,27 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import rbasamoyai.createbigcannons.CBCBlockEntities;
 import rbasamoyai.createbigcannons.munitions.fuzes.FuzeItem;
 
 import java.util.List;
 import java.util.Optional;
 
-public abstract class FuzedProjectileBlock extends ProjectileBlock implements ITE<FuzedBlockEntity> {
+public abstract class FuzedProjectileBlock<T extends FuzedBlockEntity> extends ProjectileBlock implements ITE<T> {
 
 	protected FuzedProjectileBlock(Properties properties) {
 		super(properties);
 	}
-	
-	@Override public Class<FuzedBlockEntity> getTileEntityClass() { return FuzedBlockEntity.class; }
-	@Override public BlockEntityType<? extends FuzedBlockEntity> getTileEntityType() { return CBCBlockEntities.FUZED_BLOCK.get(); }
 
 	protected static ItemStack getFuze(BlockEntity blockEntity) {
-		if (blockEntity == null) return ItemStack.EMPTY;
+		if (blockEntity == null || !blockEntity.getBlockState().hasProperty(FACING)) return ItemStack.EMPTY;
 		Direction facing = blockEntity.getBlockState().getValue(FACING);
 		Storage<ItemVariant> items = TransferUtil.getItemStorage(blockEntity, facing);
 		List<ItemStack> stacks = TransferUtil.getItems(items, 1);
 		if (stacks.isEmpty())
 			return ItemStack.EMPTY;
-		return TransferUtil.getItems(items, 1).get(0);
+		return TransferUtil.getItems(items, 1).get(0).copy();
 	}
 	
 	@Override

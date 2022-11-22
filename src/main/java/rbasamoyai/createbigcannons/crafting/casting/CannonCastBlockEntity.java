@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.simibubi.create.api.connectivity.ConnectivityHandler;
 import com.simibubi.create.foundation.fluid.SmartFluidTank;
 import com.simibubi.create.foundation.tileEntity.IMultiTileContainer;
 import com.simibubi.create.foundation.tileEntity.SmartTileEntity;
@@ -35,8 +36,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.AABB;
 import rbasamoyai.createbigcannons.CBCBlocks;
+import rbasamoyai.createbigcannons.base.CBCRegistries;
 import rbasamoyai.createbigcannons.cannons.ICannonBlockEntity;
 import rbasamoyai.createbigcannons.config.CBCConfigs;
 import rbasamoyai.createbigcannons.crafting.BlockRecipe;
@@ -49,30 +52,36 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 	
 	protected FluidTank fluid;
 	protected List<CannonCastShape> structure = new ArrayList<>();
-	protected CannonCastShape castShape = CannonCastShape.VERY_SMALL;
+	protected CannonCastShape castShape = CannonCastShape.VERY_SMALL.get();
 	protected BlockPos controllerPos;
 	protected BlockPos lastKnownPos;
 	protected int height;
 	protected FluidStack leakage = FluidStack.EMPTY;
 	protected boolean forceFluidLevelUpdate;
+	protected boolean forceCastLevelUpdate;
 	protected int castingTime;
 	protected int startCastingTime;
 	protected Map<CannonCastShape, CannonCastingRecipe> recipes = new HashMap<>();
+	protected List<BlockState> resultPreview = new ArrayList<>();
 	protected boolean updateRecipes;
 	
 	private static final int SYNC_RATE = 8;
 	protected boolean queuedSync;
 	protected int syncCooldown;
 	
-	private LerpedFloat fluidLevel; 
+	private LerpedFloat fluidLevel;
+	private LerpedFloat castLevel;
 	
 	public CannonCastBlockEntity(BlockEntityType<? extends CannonCastBlockEntity> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
 		this.fluid = new SmartFluidTank(1, this::onFluidStackChanged);
+		this.fluidOptional = LazyOptional.of(() -> this.fluid);
 		this.height = 1;
 		this.forceFluidLevelUpdate = true;
+		this.forceCastLevelUpdate = true;
 		this.updateRecipes = true;
 		this.startCastingTime = 1;
+		this.refreshCap();
 	}
 	
 	@Override public void addBehaviours(List<TileEntityBehaviour> behaviours) {}
@@ -99,18 +108,20 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 		return this.isController() ? this.fluid : this.getControllerTE().createHandlerForCap();
 	}
 	
+	public FluidTank getTank() { return this.fluid; }
+	
 	@Override
 	protected void write(CompoundTag tag, boolean clientPacket) {
-		super.write(tag, clientPacket);
 		if (this.canRenderCastModel()) {
-			tag.putString("Size", this.castShape.name().toString());
+			tag.putString("Size", CBCRegistries.CANNON_CAST_SHAPES.get().getKey(this.castShape).toString());
 		}
+		if (this.lastKnownPos != null) tag.put("LastKnownPos", NbtUtils.writeBlockPos(this.lastKnownPos));
 		
 		if (this.isController()) {
 			if (!this.structure.isEmpty()) {
 				ListTag structureTag = new ListTag();
 				for (CannonCastShape sz : this.structure) {
-					structureTag.add(StringTag.valueOf(sz.name().toString()));
+					structureTag.add(StringTag.valueOf(CBCRegistries.CANNON_CAST_SHAPES.get().getKey(sz).toString()));
 				}
 				tag.put("Structure", structureTag);
 			}
@@ -120,14 +131,33 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 			if (this.castingTime > 0) tag.putInt("CastingTime", this.castingTime);
 			if (this.startCastingTime > 1) tag.putInt("StartCastingTime", this.startCastingTime);
 			if (this.updateRecipes) tag.putBoolean("UpdateRecipes", true);
+			
+			if (!this.recipes.isEmpty() && !this.structure.isEmpty()) {
+				ListTag previewList = new ListTag();
+				for (CannonCastShape shape : this.structure) {
+					if (this.recipes.containsKey(shape)) {
+						BlockState state = this.recipes.get(shape).getResultBlock().defaultBlockState();
+						if (state.hasProperty(BlockStateProperties.FACING)) state = state.setValue(BlockStateProperties.FACING, Direction.DOWN);
+						previewList.add(NbtUtils.writeBlockState(shape.applyTo(state)));
+					} else {
+						previewList.add(new CompoundTag());
+					}
+				}
+				tag.put("Preview", previewList);
+			}
 		} else {
 			tag.put("Controller", NbtUtils.writeBlockPos(this.controllerPos));
 		}
 		
+		super.write(tag, clientPacket);
+		
 		if (!clientPacket) return;
-		if (this.forceFluidLevelUpdate) tag.putBoolean("ForceFluidUpdate", true);
+		if (this.forceFluidLevelUpdate) tag.putBoolean("ForceFluidLevel", true);
+		if (this.forceCastLevelUpdate) tag.putBoolean("ForceCastLevel", true);
 		if (this.queuedSync) tag.putBoolean("LazySync", true);
+		
 		this.forceFluidLevelUpdate = false;
+		this.forceCastLevelUpdate = false;
 	}
 	
 	@Override
@@ -138,16 +168,17 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 		int prevHeight = this.getControllerTE() == null ? 0 : this.getControllerTE().height;
 		
 		if (tag.contains("Size")) {
-			this.castShape = CannonCastShape.byId(new ResourceLocation(tag.getString("Size")));
-			if (this.castShape == null) this.castShape = CannonCastShape.VERY_SMALL;
+			this.castShape = CBCRegistries.CANNON_CAST_SHAPES.get().getValue(new ResourceLocation(tag.getString("Size")));
+			if (this.castShape == null) this.castShape = CannonCastShape.VERY_SMALL.get();
 		}
+		if (tag.contains("LastKnownPos")) this.lastKnownPos = NbtUtils.readBlockPos(tag.getCompound("LastKnownPos"));
 		
 		this.structure.clear();
 		if (tag.contains("Structure")) {
 			ListTag list = tag.getList("Structure", Tag.TAG_STRING);
 			for (int i = 0; i < list.size(); ++i) {
-				CannonCastShape shape = CannonCastShape.byId(new ResourceLocation(list.getString(i)));
-				this.structure.add(shape == null ? CannonCastShape.VERY_SMALL : shape);
+				CannonCastShape shape = CBCRegistries.CANNON_CAST_SHAPES.get().getValue(new ResourceLocation(list.getString(i)));
+				this.structure.add(shape == null ? CannonCastShape.VERY_SMALL.get() : shape);
 			}
 			this.height = tag.getInt("Height");
 			this.fluid.setCapacity(this.calculateCapacityFromStructure());
@@ -156,17 +187,23 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 			this.castingTime = Math.max(tag.getInt("CastingTime"), 0);
 			this.startCastingTime = Math.max(tag.getInt("StartCastingTime"), 1);
 			this.updateRecipes = tag.contains("UpdateRecipes");
+			
+			this.resultPreview.clear();
+			ListTag preview = tag.getList("Preview", Tag.TAG_COMPOUND);
+			for (int i = 0; i < preview.size(); ++i) {
+				this.resultPreview.add(NbtUtils.readBlockState(preview.getCompound(i)));
+			}
+			
 			this.controllerPos = null;
 		} else if (tag.contains("Controller")) {
 			this.controllerPos = NbtUtils.readBlockPos(tag.getCompound("Controller"));
 		}
 		
-		if (this.isController()) {
-			float fillState = this.getFillState();
-			if (tag.contains("ForceFluidLevel") || this.fluidLevel == null) {
-				this.fluidLevel = LerpedFloat.linear().startWithValue(fillState);
-				this.fluidLevel.chase(fillState, 0.5f, Chaser.EXP);
-			}
+		if (tag.contains("ForceFluidLevel") || this.fluidLevel == null) {
+			this.fluidLevel = LerpedFloat.linear().startWithValue(this.getFillState());
+		}
+		if (tag.contains("ForceCastLevel") || this.castLevel == null) {
+			this.castLevel = LerpedFloat.linear().startWithValue(this.getCastingState());
 		}
 		
 		if (!clientPacket) return;
@@ -176,16 +213,44 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 			if (this.isController()) this.fluid.setCapacity(this.calculateCapacityFromStructure());
 			this.invalidateRenderBoundingBox();
 		}
-		if (tag.contains("LazySync") && this.fluidLevel != null) {
+		if (this.isController()) {
+			float fillState = this.getFillState();
+			if (tag.contains("ForceFluidLevel") || this.fluidLevel == null) {
+				this.fluidLevel = LerpedFloat.linear().startWithValue(fillState);
+			}
+			this.fluidLevel.chase(fillState, 0.5f, Chaser.EXP);
+			
+			float castState = this.getCastingState();
+			if (tag.contains("ForceCastLevel") || this.castLevel == null) {
+				this.castLevel = LerpedFloat.linear().startWithValue(castState);
+			}
+			this.castLevel.chase(castState, 0.5f, Chaser.EXP);
+		}		
+		if (tag.contains("LazySync")) {
 			this.fluidLevel.chase(this.fluidLevel.getChaseTarget(), 0.125f, Chaser.EXP);
+			this.castLevel.chase(this.castLevel.getChaseTarget(), 0.125f, Chaser.EXP);
 		}
 	}
 	
 	protected void onFluidStackChanged(FluidStack stack) {
 		if (!this.hasLevel()) return;
+
+		for (int yOffset = 0; yOffset < this.height; yOffset++) {
+			for (int xOffset = 0; xOffset < 3; xOffset++) {
+				for (int zOffset = 0; zOffset < 3; zOffset++) {
+					BlockPos pos = this.worldPosition.offset(xOffset, yOffset, zOffset);
+					CannonCastBlockEntity castAt = ConnectivityHandler.partAt(this.getType(), this.level, pos);
+					if (castAt == null) continue;
+					this.level.updateNeighbourForOutputSignal(pos, castAt.getBlockState().getBlock());
+				}
+			}
+		}
+		
 		if (!this.level.isClientSide) {
 			this.notifyUpdate();
-		} else {
+		}
+		
+		if (this.isVirtual()) {
 			if (this.fluidLevel == null) {
 				this.fluidLevel = LerpedFloat.linear().startWithValue(this.getFillState());
 			}
@@ -211,9 +276,8 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 			return;
 		}
 		
-		if (this.fluidLevel != null) {
-			this.fluidLevel.tickChaser();
-		}
+		if (this.fluidLevel != null) this.fluidLevel.tickChaser();
+		if (this.castLevel != null) this.castLevel.tickChaser();
 		if (this.isController()) {
 			this.tickCastingBehavior();
 		}
@@ -252,10 +316,15 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 					this.updateRecipes = false;
 				}
 				this.castingTime--;
+				this.notifyUpdate();
 				if (this.castingTime <= 0) {
 					this.finishCasting();
 					return;
 				}
+			} else {
+				this.startCastingTime = 1;
+				this.castingTime = 0;
+				this.updateRecipes = true;
 			}
 		}
 	}
@@ -302,6 +371,8 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 				if (!(this.level.getBlockEntity(pos1) instanceof FinishedCannonCastBlockEntity fCast)) return;
 				if (pos1.equals(corner)) {
 					fCast.setRenderedShape(cast.castShape);
+					fCast.setHeight(this.height);
+					fCast.setRootBlock(this.worldPosition.offset(-1, 0, -1));
 				} else {
 					fCast.setCentralBlock(corner);
 				}
@@ -362,7 +433,11 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 				childCast.notifyUpdate();
 			}
 		}
-		this.getControllerTE().updateRecipes = true;
+		CannonCastBlockEntity controller = this.getControllerTE();
+		controller.updateRecipes = true;
+		controller.forceFluidLevelUpdate = true;
+		controller.forceCastLevelUpdate = true;
+		controller.notifyUpdate();
 		this.notifyUpdate();
 	}
 	
@@ -414,25 +489,14 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 				}
 			}
 			
-			List<BlockPos> toRemove = new ArrayList<>();
-			for (Iterator<BlockPos> iter = BlockPos.betweenClosed(this.worldPosition.offset(-1, 0, -1), this.worldPosition.offset(1, 0, 1)).iterator(); iter.hasNext(); ) {
-				BlockPos pos = iter.next();
-				if (CBCBlocks.CANNON_CAST.has(this.level.getBlockState(pos))) {
-					toRemove.add(pos.immutable());
-				}
-			}
-			
-			this.setRemoved();
-			for (BlockPos pos : toRemove) {
-				this.level.removeBlockEntity(pos);
-				this.level.setBlock(pos, Blocks.AIR.defaultBlockState(), 11);
+			for (BlockPos pos : BlockPos.betweenClosed(this.worldPosition.offset(-1, 0, -1), this.worldPosition.offset(1, 0, 1))) {
+				if (CBCBlocks.CANNON_CAST.has(this.level.getBlockState(pos))) this.level.setBlock(pos, Blocks.AIR.defaultBlockState(), 11);
 			}
 			
 			if (!addLeak.isEmpty() && addLeak.getAmount() >= 1000) {
 				this.level.setBlock(this.worldPosition, addLeak.getFluid().defaultFluidState().createLegacyBlock(), 11);
 			}
 		} else if (this.level.getBlockEntity(this.getCenterBlock()) instanceof CannonCastBlockEntity otherCast) {
-			this.level.removeBlockEntity(this.worldPosition);
 			otherCast.destroyCastMultiblockAtLayer();
 		}
 	}
@@ -480,7 +544,8 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 	public LerpedFloat getFluidLevel() { return this.fluidLevel; }
 	public void setFluidLevel(LerpedFloat level) { this.fluidLevel = level; }
 	
-	public float getCastingState() { return this.startCastingTime < 1 ? 0.0f : 1.0f - (float) this.castingTime / (float) this.startCastingTime; } 
+	public float getCastingState() { return this.startCastingTime <= 1 ? 0.0f : 1.0f - (float) this.castingTime / (float) this.startCastingTime; }
+	public LerpedFloat getCastingLevel() { return this.castLevel; }
 
 	@Override
 	public BlockPos getController() {
@@ -500,7 +565,8 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 
 	@Override
 	public void setController(BlockPos pos) {
-		if (this.level.isClientSide || this.isVirtual() || pos.equals(this.controllerPos)) return;
+		if (this.level.isClientSide) this.invalidateRenderBoundingBox();
+		if (this.level.isClientSide && !this.isVirtual() || pos.equals(this.controllerPos)) return;
 		this.controllerPos = pos;
 		this.notifyUpdate();
 	}

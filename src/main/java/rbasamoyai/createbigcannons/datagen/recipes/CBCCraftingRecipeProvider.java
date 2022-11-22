@@ -36,11 +36,19 @@ public class CBCCraftingRecipeProvider extends FabricRecipeProvider {
 		.save(cons);
 		
 		ShapedRecipeBuilder.shaped(CBCItems.TIMED_FUZE.get())
-		.define('I', Items.IRON_INGOT).define('M', AllItems.PRECISION_MECHANISM.get()).define('R', Items.REDSTONE)
+		.define('I', Items.IRON_INGOT).define('C', Items.CLOCK).define('R', Items.REDSTONE)
 		.pattern("I")
-		.pattern("M")
+		.pattern("C")
 		.pattern("R")
-		.unlockedBy(getHasName(AllItems.PRECISION_MECHANISM.get()), has(AllItems.PRECISION_MECHANISM.get()))
+		.unlockedBy(getHasName(Items.CLOCK), has(Items.CLOCK))
+		.save(cons);
+		
+		ShapedRecipeBuilder.shaped(CBCItems.PROXIMITY_FUZE.get())
+		.define('A', Items.IRON_BARS).define('C', Items.QUARTZ).define('R', Items.REDSTONE).define('I', Items.IRON_INGOT)
+		.pattern(" A ")
+		.pattern("RCR")
+		.pattern(" I ")
+		.unlockedBy(getHasName(Items.IRON_BARS), has(Items.IRON_BARS))
 		.save(cons);
 		
 		ShapedRecipeBuilder.shaped(CBCItems.EMPTY_POWDER_CHARGE.get())
@@ -116,7 +124,7 @@ public class CBCCraftingRecipeProvider extends FabricRecipeProvider {
 		MechanicalCraftingRecipeBuilder.shapedRecipe(CBCBlocks.HE_SHELL.get())
 		.key('I', Items.IRON_INGOT).key('T', Items.TNT).key('S', ItemTags.WOODEN_SLABS)
 		.patternLine(" I ")
-		.patternLine("III")
+		.patternLine("ITI")
 		.patternLine("ITI")
 		.patternLine(" S ")
 		.build(cons);
@@ -126,6 +134,14 @@ public class CBCCraftingRecipeProvider extends FabricRecipeProvider {
 		.patternLine(" C ")
 		.patternLine("ICI")
 		.patternLine("ITI")
+		.patternLine(" S ")
+		.build(cons);
+		
+		MechanicalCraftingRecipeBuilder.shapedRecipe(CBCBlocks.FLUID_SHELL.get())
+		.key('I', Items.IRON_INGOT).key('P', AllBlocks.FLUID_PIPE.get()).key('S', ItemTags.WOODEN_SLABS)
+		.patternLine(" I ")
+		.patternLine("IPI")
+		.patternLine("IPI")
 		.patternLine(" S ")
 		.build(cons);
 		
@@ -316,6 +332,22 @@ public class CBCCraftingRecipeProvider extends FabricRecipeProvider {
 		.pattern(" S ")
 		.pattern("III")
 		.unlockedBy(getHasName(CBCItems.NETHERSTEEL_INGOT.get()), has(CBCItems.NETHERSTEEL_INGOT.get()))
+		.save(cons);
+		
+		ShapedRecipeBuilder.shaped(CBCItems.RAM_ROD.get())
+		.define('H', CBCBlocks.RAM_HEAD.get()).define('S', Items.STICK)
+		.pattern("H")
+		.pattern("S")
+		.pattern("S")
+		.unlockedBy(getHasName(CBCBlocks.RAM_HEAD.get()), has(CBCBlocks.RAM_HEAD.get()))
+		.save(cons);
+		
+		ShapedRecipeBuilder.shaped(CBCItems.WORM.get())
+		.define('H', CBCBlocks.WORM_HEAD.get()).define('S', Items.STICK)
+		.pattern("H")
+		.pattern("S")
+		.pattern("S")
+		.unlockedBy(getHasName(CBCBlocks.WORM_HEAD.get()), has(CBCBlocks.WORM_HEAD.get()))
 		.save(cons);
 	}
 	

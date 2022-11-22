@@ -6,13 +6,13 @@
     ]
   },
   "criteria": {
-    "has_precision_mechanism": {
+    "has_clock": {
       "trigger": "minecraft:inventory_changed",
       "conditions": {
         "items": [
           {
             "items": [
-              "create:precision_mechanism"
+              "minecraft:clock"
             ]
           }
         ]
@@ -27,7 +27,7 @@
   },
   "requirements": [
     [
-      "has_precision_mechanism",
+      "has_clock",
       "has_the_recipe"
     ]
   ]

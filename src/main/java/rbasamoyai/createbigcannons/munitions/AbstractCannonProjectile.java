@@ -25,6 +25,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
+import rbasamoyai.createbigcannons.config.CBCCfgMunitions.GriefState;
 import rbasamoyai.createbigcannons.config.CBCConfigs;
 
 public abstract class AbstractCannonProjectile extends AbstractHurtingProjectile {
@@ -120,7 +121,14 @@ public abstract class AbstractCannonProjectile extends AbstractHurtingProjectile
 		if (!this.level.isClientSide) {
 			Vec3 hitLoc = result.getLocation();
 			byte breakthroughPower = this.getBreakthroughPower();
-			if (breakthroughPower > 0) {
+			
+			if (breakthroughPower <= 0) {
+				if (CBCConfigs.SERVER.munitions.damageRestriction.get() == GriefState.NO_DAMAGE) {
+					this.level.explode(null, hitLoc.x, hitLoc.y, hitLoc.z, 2, Explosion.BlockInteraction.NONE);
+				}
+				this.setInGround(true);
+				this.setPos(hitLoc);
+			} else {
 				Vec3 currentVel = this.getDeltaMovement();
 				
 				Explosion explode = this.level.explode(null, hitLoc.x, hitLoc.y, hitLoc.z, 2, Explosion.BlockInteraction.DESTROY);
@@ -138,10 +146,6 @@ public abstract class AbstractCannonProjectile extends AbstractHurtingProjectile
 						this.setBreakthroughPower((byte) 0);
 					}
 				}
-			}
-			if (this.getBreakthroughPower() <= 0) {
-				this.setInGround(true);
-				this.setPos(hitLoc);
 			}
 		}
 	}
@@ -183,7 +187,7 @@ public abstract class AbstractCannonProjectile extends AbstractHurtingProjectile
 	}
 	
 	public byte getBreakthroughPower() {
-		return this.entityData.get(BREAKTHROUGH_POWER);
+		return CBCConfigs.SERVER.munitions.damageRestriction.get() == GriefState.NO_DAMAGE ? 0 : this.entityData.get(BREAKTHROUGH_POWER);
 	}
 
 	public static void build(FabricEntityTypeBuilder<? extends AbstractCannonProjectile> builder) {

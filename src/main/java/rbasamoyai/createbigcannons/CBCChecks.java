@@ -12,26 +12,28 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import rbasamoyai.createbigcannons.cannonmount.CannonMountBlockEntity;
 import rbasamoyai.createbigcannons.cannons.CannonBlock;
 import rbasamoyai.createbigcannons.cannons.ICannonBlockEntity;
+import rbasamoyai.createbigcannons.cannons.cannonend.CannonEnd;
 import rbasamoyai.createbigcannons.cannons.cannonend.ScrewBreechBlock;
 
 public class CBCChecks {
 
 	private static CheckResult attachedCheckCannons(BlockState state, Level level, BlockPos pos, Direction attached) {
 		if (!(state.getBlock() instanceof CannonBlock cannonBlock)) return CheckResult.PASS;
-		BlockState attachedState = level.getBlockState(pos.relative(attached));
+		BlockPos otherPos = pos.relative(attached);
+		BlockState attachedState = level.getBlockState(otherPos);
 		if (!(attachedState.getBlock() instanceof CannonBlock otherBlock)) return CheckResult.PASS;
 		
-		if (!(level.getBlockEntity(pos) instanceof ICannonBlockEntity cbe) || !(level.getBlockEntity(pos.relative(attached)) instanceof ICannonBlockEntity cbe1)) {
+		if (!(level.getBlockEntity(pos) instanceof ICannonBlockEntity cbe) || !(level.getBlockEntity(otherPos) instanceof ICannonBlockEntity cbe1)) {
 			return CheckResult.PASS;
 		}
 		
 		boolean result = cbe.cannonBehavior().isConnectedTo(attached) && cbe1.cannonBehavior().isConnectedTo(attached.getOpposite());
 		
 		if (cannonBlock instanceof ScrewBreechBlock) {
-			result &= !ScrewBreechBlock.isOpen(state);
+			result &= cannonBlock.getOpeningType(level, state, pos) != CannonEnd.OPEN;
 		}
 		if (otherBlock instanceof ScrewBreechBlock) {
-			result &= !ScrewBreechBlock.isOpen(attachedState) && attachedState.getValue(BlockStateProperties.FACING) == attached;
+			result &= otherBlock.getOpeningType(level, attachedState, otherPos) != CannonEnd.OPEN && attachedState.getValue(BlockStateProperties.FACING) == attached;
 		}
 		return CheckResult.of(result);
 	}

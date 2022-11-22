@@ -1,7 +1,9 @@
 package rbasamoyai.createbigcannons.crafting.builtup;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -26,6 +28,7 @@ import rbasamoyai.createbigcannons.cannons.CannonBlock;
 import rbasamoyai.createbigcannons.cannons.ICannonBlockEntity;
 import rbasamoyai.createbigcannons.crafting.BlockRecipe;
 import rbasamoyai.createbigcannons.crafting.BlockRecipeSerializer;
+import rbasamoyai.createbigcannons.crafting.BlockRecipeType;
 
 public class BuiltUpHeatingRecipe implements BlockRecipe {
 
@@ -38,6 +41,9 @@ public class BuiltUpHeatingRecipe implements BlockRecipe {
 		this.result = result;
 		this.id = id;
 	}
+	
+	public Set<LayerPredicate> layers() { return this.layers; }
+	public Block result() { return this.result; }
 	
 	@Override
 	public boolean matches(Level level, BlockPos pos) {
@@ -78,6 +84,7 @@ public class BuiltUpHeatingRecipe implements BlockRecipe {
 	@Override public Block getResultBlock() { return this.result; }
 	@Override public ResourceLocation getId() { return this.id; }
 	@Override public BlockRecipeSerializer<?> getSerializer() { return BlockRecipeSerializer.BUILT_UP_HEATING.get(); }
+	@Override public BlockRecipeType<?> getType() { return BlockRecipeType.BUILT_UP_HEATING.get(); }
 
 	public static class Serializer implements BlockRecipeSerializer<BuiltUpHeatingRecipe> {
 		@Override
@@ -119,10 +126,24 @@ public class BuiltUpHeatingRecipe implements BlockRecipe {
 		
 		private final Set<Block> blocks;
 		private final TagKey<Block> tag;
+		private List<Block> matchingBlocks;
 		
 		public LayerPredicate(Set<Block> blocks, TagKey<Block> tag) {
 			this.blocks = blocks;
 			this.tag = tag;
+		}
+		
+		public List<Block> blocks() {
+			if (this.matchingBlocks != null) return this.matchingBlocks;
+			this.matchingBlocks = new ArrayList<>();
+			if (this.blocks != null) this.matchingBlocks.addAll(this.blocks);
+			else if (this.tag != null) {
+				ForgeRegistries.BLOCKS
+				.tags()
+				.getTag(this.tag)
+				.forEach(this.matchingBlocks::add);
+			}
+			return this.matchingBlocks;
 		}
 		
 		@Override
