@@ -5,6 +5,7 @@ import com.simibubi.create.AllItems;
 import com.simibubi.create.AllSoundEvents;
 import com.simibubi.create.content.contraptions.components.structureMovement.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.components.structureMovement.Contraption;
+import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -23,10 +24,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -398,11 +396,11 @@ public class CannonCarriageEntity extends Entity implements ControlPitchContrapt
 
 	@Override public Packet<?> getAddEntityPacket() { return new ClientboundAddEntityPacket(this); }
 
-	public static void build(EntityType.Builder<? extends CannonCarriageEntity> builder) {
-		builder.setTrackingRange(8)
+	public static void build(FabricEntityTypeBuilder<? extends CannonCarriageEntity> builder) {
+		builder.trackRangeChunks(8)
 				.fireImmune()
-				.setShouldReceiveVelocityUpdates(true)
-				.sized(1.5f, 1.5f);
+				.forceTrackedVelocityUpdates(true)
+				.dimensions(EntityDimensions.fixed(1.5f, 1.5f));
 	}
 
 	@Override public boolean isAttachedTo(AbstractContraptionEntity entity) { return this.cannonContraption == entity; }

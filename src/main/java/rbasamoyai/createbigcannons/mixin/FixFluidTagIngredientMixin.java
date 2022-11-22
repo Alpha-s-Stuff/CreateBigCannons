@@ -1,18 +1,15 @@
 package rbasamoyai.createbigcannons.mixin;
 
+import com.simibubi.create.foundation.fluid.FluidIngredient.FluidTagIngredient;
 import io.github.fabricators_of_create.porting_lib.util.FluidStack;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.level.material.Fluid;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import com.simibubi.create.foundation.fluid.FluidIngredient.FluidTagIngredient;
-
-import net.minecraft.tags.TagKey;
-import net.minecraft.world.level.material.Fluid;
-import net.minecraftforge.fluids.FluidStack;
 
 @Mixin(FluidTagIngredient.class)
 public abstract class FixFluidTagIngredientMixin {

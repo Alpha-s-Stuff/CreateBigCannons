@@ -205,10 +205,10 @@ public class CannonCraftingScenes {
 		BlockPos castPos = util.grid.at(2, 2, 2);
 		FluidStack content = new FluidStack(CBCFluids.MOLTEN_CAST_IRON.get(), 144);
 		for (int i = 0; i < 24; ++i) {
-			scene.world.modifyTileEntity(tankPos, FluidTankTileEntity.class, tank -> tank.getTankInventory()
-					.drain(144, FluidAction.EXECUTE));
-			scene.world.modifyTileEntity(castPos, CannonCastBlockEntity.class, cast1 -> cast1.getTank()
-					.fill(content, FluidAction.EXECUTE));
+			scene.world.modifyTileEntity(tankPos, FluidTankTileEntity.class, tank -> TransferUtil.extractAnyFluid(tank.getTankInventory()
+					, 144));
+			scene.world.modifyTileEntity(castPos, CannonCastBlockEntity.class, cast1 -> TransferUtil.insertFluid(cast1.getTank()
+					, content));
 			scene.idle(5);
 		}
 		scene.idle(40);
@@ -686,7 +686,7 @@ public class CannonCraftingScenes {
 	}
 	
 	private static Consumer<CompoundTag> putItemInDeployer(ItemStack stack) {
-		return tag -> tag.put("HeldItem", stack.serializeNBT());
+		return tag -> tag.put("HeldItem", NBTSerializer.serializeNBT(stack));
 	}
 	
 	private static Consumer<CompoundTag> setUnfinishedCannonShape(CannonCastShape shape) {

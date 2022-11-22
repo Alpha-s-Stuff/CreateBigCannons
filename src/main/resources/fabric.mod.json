@@ -16,7 +16,7 @@
 
   "license": "MIT",
   "icon": "logo.png",
-
+  "accessWidener": "bigcannons.accesswidener",
   "environment": "*",
   "entrypoints": {
     "main": [

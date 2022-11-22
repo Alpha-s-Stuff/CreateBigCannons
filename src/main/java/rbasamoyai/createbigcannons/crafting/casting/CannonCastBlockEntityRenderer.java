@@ -1,9 +1,5 @@
 package rbasamoyai.createbigcannons.crafting.casting;
 
-import java.util.List;
-import java.util.Random;
-
-import com.jozufozu.flywheel.core.virtual.VirtualEmptyModelData;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.simibubi.create.foundation.fluid.FluidRenderer;
@@ -11,8 +7,8 @@ import com.simibubi.create.foundation.render.CachedBufferer;
 import com.simibubi.create.foundation.render.SuperByteBuffer;
 import com.simibubi.create.foundation.tileEntity.renderer.SafeTileEntityRenderer;
 import com.simibubi.create.foundation.utility.animation.LerpedFloat;
-
 import io.github.fabricators_of_create.porting_lib.util.FluidStack;
+import io.github.fabricators_of_create.porting_lib.util.client.VertexUtils;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.Sheets;
@@ -24,6 +20,9 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.state.BlockState;
 import rbasamoyai.createbigcannons.CBCBlockPartials;
+
+import java.util.List;
+import java.util.Random;
 
 public class CannonCastBlockEntityRenderer extends SafeTileEntityRenderer<CannonCastBlockEntity> {
 
@@ -75,11 +74,11 @@ public class CannonCastBlockEntityRenderer extends SafeTileEntityRenderer<Cannon
 					
 					for (Direction dir : Direction.values()) {
 						rand.setSeed(42L);
-						renderQuadList(ms.last(), vCons, 1f, 1f, 1f, alpha, model.getQuads(state, dir, rand, VirtualEmptyModelData.INSTANCE), light, overlay);
+						renderQuadList(ms.last(), vCons, 1f, 1f, 1f, alpha, model.getQuads(state, dir, rand), light, overlay);
 					}
 					
 					rand.setSeed(42L);
-					renderQuadList(ms.last(), vCons, 1f, 1f, 1f, alpha, model.getQuads(state, null, rand, VirtualEmptyModelData.INSTANCE), light, overlay);
+					renderQuadList(ms.last(), vCons, 1f, 1f, 1f, alpha, model.getQuads(state, null, rand), light, overlay);
 					
 					ms.popPose();
 				}
@@ -105,7 +104,7 @@ public class CannonCastBlockEntityRenderer extends SafeTileEntityRenderer<Cannon
 				f2 = 1.0F;
 			}
 
-			consumer.putBulkData(pose, quad, f, f1, f2, alpha, packedLight, packedOverlay);
+			VertexUtils.putBulkData(consumer, pose, quad, f, f1, f2, alpha, packedLight, packedOverlay);
 		}
 
 	}

@@ -75,13 +75,11 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 	public CannonCastBlockEntity(BlockEntityType<? extends CannonCastBlockEntity> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
 		this.fluid = new SmartFluidTank(1, this::onFluidStackChanged);
-		this.fluidOptional = LazyOptional.of(() -> this.fluid);
 		this.height = 1;
 		this.forceFluidLevelUpdate = true;
 		this.forceCastLevelUpdate = true;
 		this.updateRecipes = true;
 		this.startCastingTime = 1;
-		this.refreshCap();
 	}
 	
 	@Override public void addBehaviours(List<TileEntityBehaviour> behaviours) {}
@@ -168,7 +166,7 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 		int prevHeight = this.getControllerTE() == null ? 0 : this.getControllerTE().height;
 		
 		if (tag.contains("Size")) {
-			this.castShape = CBCRegistries.CANNON_CAST_SHAPES.get().getValue(new ResourceLocation(tag.getString("Size")));
+			this.castShape = CBCRegistries.CANNON_CAST_SHAPES.get().get(new ResourceLocation(tag.getString("Size")));
 			if (this.castShape == null) this.castShape = CannonCastShape.VERY_SMALL.get();
 		}
 		if (tag.contains("LastKnownPos")) this.lastKnownPos = NbtUtils.readBlockPos(tag.getCompound("LastKnownPos"));
@@ -177,7 +175,7 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 		if (tag.contains("Structure")) {
 			ListTag list = tag.getList("Structure", Tag.TAG_STRING);
 			for (int i = 0; i < list.size(); ++i) {
-				CannonCastShape shape = CBCRegistries.CANNON_CAST_SHAPES.get().getValue(new ResourceLocation(list.getString(i)));
+				CannonCastShape shape = CBCRegistries.CANNON_CAST_SHAPES.get().get(new ResourceLocation(list.getString(i)));
 				this.structure.add(shape == null ? CannonCastShape.VERY_SMALL.get() : shape);
 			}
 			this.height = tag.getInt("Height");
@@ -447,11 +445,11 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 			int thisIndex = this.worldPosition.getY() - controller.worldPosition.getY();
 			
 			controller.height -= 1;
-			int capacityUpTo = controller.structure.subList(0, Mth.clamp(thisIndex, 0, controller.structure.size()))
+			long capacityUpTo = controller.structure.subList(0, Mth.clamp(thisIndex, 0, controller.structure.size()))
 					.stream()
 					.map(CannonCastShape::fluidSize)
-					.reduce(Integer::sum)
-					.orElseGet(() -> 0);
+					.reduce(Long::sum)
+					.orElseGet(() -> 0L);
 			long leakAmount = Mth.clamp(controller.fluid.getFluidAmount() - capacityUpTo, 0, this.castShape.fluidSize());
 			FluidStack addLeak = TransferUtil.extractAnyFluid(controller.fluid, leakAmount);
 			controller.fluid.setCapacity(Math.max(1, controller.fluid.getCapacity() - this.castShape.fluidSize()));
@@ -528,8 +526,8 @@ public class CannonCastBlockEntity extends SmartTileEntity implements WandAction
 		}
 	}
 	
-	public int calculateCapacityFromStructure() {
-		return this.structure.stream().map(CannonCastShape::fluidSize).reduce(Integer::sum).orElseGet(() -> 0);
+	public long calculateCapacityFromStructure() {
+		return this.structure.stream().map(CannonCastShape::fluidSize).reduce(Long::sum).orElseGet(() -> 0L);
 	}
 	
 	public BlockPos getCenterBlock() {

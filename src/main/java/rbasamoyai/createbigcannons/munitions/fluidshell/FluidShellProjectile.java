@@ -2,13 +2,13 @@ package rbasamoyai.createbigcannons.munitions.fluidshell;
 
 import java.util.List;
 
+import io.github.fabricators_of_create.porting_lib.util.FluidStack;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.fluids.FluidStack;
 import rbasamoyai.createbigcannons.CBCBlocks;
 import rbasamoyai.createbigcannons.CBCEntityTypes;
 import rbasamoyai.createbigcannons.config.CBCConfigs;

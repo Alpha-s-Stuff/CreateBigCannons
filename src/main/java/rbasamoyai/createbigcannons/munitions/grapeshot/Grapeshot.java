@@ -1,5 +1,6 @@
 package rbasamoyai.createbigcannons.munitions.grapeshot;
 
+import io.github.fabricators_of_create.porting_lib.mixin.common.accessor.DamageSourceAccessor;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.Level;
@@ -21,7 +22,7 @@ public class Grapeshot extends Shrapnel {
 			|| state.is(CBCTags.BlockCBC.GRAPESHOT_VULNERABLE) && this.random.nextFloat() < CBCConfigs.SERVER.munitions.grapeshotVulnerableBreakChance.getF();
 	}
 	
-	private static final DamageSource GRAPESHOT = new DamageSource(CreateBigCannons.MOD_ID + ".grapeshot");
+	private static final DamageSource GRAPESHOT = DamageSourceAccessor.port_lib$init(CreateBigCannons.MOD_ID + ".grapeshot");
 	@Override protected DamageSource getDamageSource() { return GRAPESHOT; }
 
 }

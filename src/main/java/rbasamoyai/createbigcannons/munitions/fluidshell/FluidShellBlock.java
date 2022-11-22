@@ -1,11 +1,11 @@
 package rbasamoyai.createbigcannons.munitions.fluidshell;
 
+import io.github.fabricators_of_create.porting_lib.util.FluidStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.fluids.FluidStack;
 import rbasamoyai.createbigcannons.CBCBlockEntities;
 import rbasamoyai.createbigcannons.CBCEntityTypes;
 import rbasamoyai.createbigcannons.munitions.AbstractCannonProjectile;
@@ -29,7 +29,7 @@ public class FluidShellBlock extends FuzedProjectileBlock<FluidShellBlockEntity>
 	}
 	
 	public static FluidStack getFluid(BlockEntity blockEntity) {
-		return blockEntity instanceof FluidShellBlockEntity shell ? shell.tank.getFluidInTank(0).copy() : FluidStack.EMPTY;
+		return blockEntity instanceof FluidShellBlockEntity shell ? shell.tank.getFluid().copy() : FluidStack.EMPTY;
 	}
 
 }

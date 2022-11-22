@@ -6,6 +6,10 @@ import com.simibubi.create.content.contraptions.goggles.IHaveGoggleInformation;
 import com.simibubi.create.foundation.tileEntity.SyncedTileEntity;
 import com.simibubi.create.foundation.utility.Lang;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemTransferable;
+import io.github.fabricators_of_create.porting_lib.util.NBTSerializer;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -20,10 +24,10 @@ import org.jetbrains.annotations.Nullable;
 import rbasamoyai.createbigcannons.CreateBigCannons;
 import rbasamoyai.createbigcannons.munitions.fuzes.FuzeItem;
 
-public class FuzedBlockEntity extends SyncedTileEntity implements IHaveGoggleInformation {
+public class FuzedBlockEntity extends SyncedTileEntity implements IHaveGoggleInformation, ItemTransferable {
 
 	protected ItemStack fuze = ItemStack.EMPTY;
-	private LazyOptional<Storage<ItemVariant>> fuzeOptional;
+	private FuzeItemHandler fuzeStorage = new FuzeItemHandler(this);
 	
 	public FuzedBlockEntity(BlockEntityType<? extends FuzedBlockEntity> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
@@ -33,28 +37,13 @@ public class FuzedBlockEntity extends SyncedTileEntity implements IHaveGoggleInf
 	@Override
 	public Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
 		if (side == this.getBlockState().getValue(BlockStateProperties.FACING)) {
-			if (this.fuzeOptional == null) {
-				this.fuzeOptional = LazyOptional.of(this::createHandler);
-			}
-			return this.fuzeOptional.getValueUnsafer();
+			return fuzeStorage;
 		}
 		return null;
 	}
 	
 	public void setFuze(ItemStack stack) { this.fuze = stack; }
 	public ItemStack getFuze() { return this.fuze; }
-	
-	private Storage<ItemVariant> createHandler() {
-		return new FuzeItemHandler(this);
-	}
-	
-	@Override
-	public void invalidateCaps() {
-		super.invalidateCaps();
-		if (this.fuzeOptional != null) {
-			this.fuzeOptional.invalidate();
-		}
-	}
 	
 	@Override
 	protected void saveAdditional(CompoundTag tag) {

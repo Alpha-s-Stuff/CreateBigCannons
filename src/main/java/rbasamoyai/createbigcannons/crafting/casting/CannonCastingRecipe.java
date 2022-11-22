@@ -66,7 +66,7 @@ public class CannonCastingRecipe implements BlockRecipe {
 	public static class Serializer implements BlockRecipeSerializer<CannonCastingRecipe> {
 		@Override
 		public CannonCastingRecipe fromJson(ResourceLocation id, JsonObject obj) {
-			CannonCastShape shape = CBCRegistries.CANNON_CAST_SHAPES.get().getValue(new ResourceLocation(obj.get("cast_shape").getAsString()));
+			CannonCastShape shape = CBCRegistries.CANNON_CAST_SHAPES.get().get(new ResourceLocation(obj.get("cast_shape").getAsString()));
 			FluidIngredient ingredient = FluidIngredient.deserialize(obj.get("fluid"));
 			int castingTime = obj.get("casting_time").getAsInt();
 			Block result = Registry.BLOCK.get(new ResourceLocation(obj.get("result").getAsString()));
@@ -75,7 +75,7 @@ public class CannonCastingRecipe implements BlockRecipe {
 
 		@Override
 		public CannonCastingRecipe fromNetwork(ResourceLocation id, FriendlyByteBuf buf) {
-			CannonCastShape shape = CBCRegistries.CANNON_CAST_SHAPES.get().getValue(buf.readResourceLocation());
+			CannonCastShape shape = CBCRegistries.CANNON_CAST_SHAPES.get().get(buf.readResourceLocation());
 			int castingTime = buf.readVarInt();
 			Block result = Registry.BLOCK.get(buf.readResourceLocation());
 			FluidIngredient ingredient = FluidIngredient.read(buf);

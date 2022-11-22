@@ -2,7 +2,7 @@ package rbasamoyai.createbigcannons.munitions.fluidshell;
 
 import com.simibubi.create.AllFluids;
 import com.simibubi.create.content.contraptions.particle.AirParticleData;
-
+import io.github.fabricators_of_create.porting_lib.util.FluidStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.nbt.CompoundTag;
@@ -28,15 +28,14 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.fluids.FluidStack;
 import rbasamoyai.createbigcannons.config.CBCConfigs;
 import rbasamoyai.createbigcannons.munitions.shrapnel.Shrapnel;
 
 public class FluidBlob extends Shrapnel {
 	
 	public static final EntityDataSerializer<FluidStack> FLUID_STACK_SERIALIZER = new EntityDataSerializer<>() {
-		@Override public void write(FriendlyByteBuf buf, FluidStack fluid) { buf.writeFluidStack(fluid); }
-		@Override public FluidStack read(FriendlyByteBuf buf) { return buf.readFluidStack(); }
+		@Override public void write(FriendlyByteBuf buf, FluidStack fluid) { fluid.toBuffer(buf); }
+		@Override public FluidStack read(FriendlyByteBuf buf) { return FluidStack.fromBuffer(buf); }
 		@Override public FluidStack copy(FluidStack fluid) { return fluid.copy(); }
 	};
 	

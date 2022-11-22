@@ -1,14 +1,14 @@
 package rbasamoyai.createbigcannons.compat.jei;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
+import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
-import net.minecraftforge.registries.ForgeRegistries;
 import rbasamoyai.createbigcannons.crafting.boring.TransformableByBoring;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public class CannonBoringRecipe extends HardcodedBlockRecipe {
 
@@ -26,10 +26,10 @@ public class CannonBoringRecipe extends HardcodedBlockRecipe {
 	public Block ingredientBlock() { return this.ingredientRaw; }
 	
 	public static Collection<CannonBoringRecipe> makeAllBoringRecipes() {
-		return ForgeRegistries.BLOCKS.getValues()
+		return Registry.BLOCK
 		.stream()
 		.filter(TransformableByBoring.class::isInstance)
-		.map(b -> new CannonBoringRecipe(ForgeRegistries.BLOCKS.getKey(b), ((TransformableByBoring) b).getBoredBlockState(b.defaultBlockState()).getBlock(), b))
+		.map(b -> new CannonBoringRecipe(Registry.BLOCK.getKey(b), ((TransformableByBoring) b).getBoredBlockState(b.defaultBlockState()).getBlock(), b))
 		.toList();
 	}
 

@@ -1,9 +1,11 @@
 package rbasamoyai.createbigcannons.munitions.fluidshell;
 
-import java.util.List;
-
 import com.simibubi.create.foundation.fluid.SmartFluidTank;
-
+import io.github.fabricators_of_create.porting_lib.transfer.fluid.FluidTank;
+import io.github.fabricators_of_create.porting_lib.transfer.fluid.FluidTransferable;
+import io.github.fabricators_of_create.porting_lib.util.FluidStack;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -11,19 +13,15 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fluids.FluidStack;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
-import net.minecraftforge.fluids.capability.IFluidHandler;
-import net.minecraftforge.fluids.capability.templates.FluidTank;
+import org.jetbrains.annotations.Nullable;
 import rbasamoyai.createbigcannons.config.CBCConfigs;
 import rbasamoyai.createbigcannons.munitions.FuzedBlockEntity;
 
-public class FluidShellBlockEntity extends FuzedBlockEntity {
+import java.util.List;
+
+public class FluidShellBlockEntity extends FuzedBlockEntity implements FluidTransferable {
 
 	protected FluidTank tank;
-	private LazyOptional<IFluidHandler> fluidOptional;
 	
 	public FluidShellBlockEntity(BlockEntityType<? extends FluidShellBlockEntity> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
@@ -41,32 +39,18 @@ public class FluidShellBlockEntity extends FuzedBlockEntity {
 		super.load(tag);
 		this.tank.readFromNBT(tag.getCompound("FluidContent"));
 	}
-	
+
+	@Nullable
 	@Override
-	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
-		if (cap == CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY && side == this.getBlockState().getValue(BlockStateProperties.FACING) && this.fuze.isEmpty()) {
-			return this.getFluidOptional().cast();
+	public Storage<FluidVariant> getFluidStorage(@Nullable Direction side) {
+		if (side == this.getBlockState().getValue(BlockStateProperties.FACING) && this.fuze.isEmpty()) {
+			return tank;
 		}
-		return super.getCapability(cap, side);
+		return null;
 	}
 	
 	public static int getFluidShellCapacity() {
 		return CBCConfigs.SERVER.munitions.fluidShellCapacity.get();
-	}
-	
-	public LazyOptional<IFluidHandler> getFluidOptional() {
-		if (this.fluidOptional == null) {
-			this.fluidOptional = LazyOptional.of(() -> this.tank);
-		}
-		return this.fluidOptional;
-	}
-	
-	@Override
-	public void invalidateCaps() {
-		super.invalidateCaps();
-		if (this.fluidOptional != null) {
-			this.fluidOptional.invalidate();
-		}
 	}
 	
 	protected void onFluidStackChanged(FluidStack newStack) {
@@ -79,7 +63,7 @@ public class FluidShellBlockEntity extends FuzedBlockEntity {
 	@Override
 	public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
 		super.addToGoggleTooltip(tooltip, isPlayerSneaking);
-		this.containedFluidTooltip(tooltip, isPlayerSneaking, this.getFluidOptional());
+		this.containedFluidTooltip(tooltip, isPlayerSneaking, this.tank);
 		return true;
 	}
 

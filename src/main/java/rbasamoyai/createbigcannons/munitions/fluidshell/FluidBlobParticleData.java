@@ -5,12 +5,11 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.simibubi.create.foundation.utility.RegisteredObjects;
-
+import io.github.fabricators_of_create.porting_lib.util.FluidStack;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.material.Fluids;
-import net.minecraftforge.fluids.FluidStack;
 import rbasamoyai.createbigcannons.CBCParticleTypes;
 
 public class FluidBlobParticleData implements ParticleOptions {
@@ -26,7 +25,7 @@ public class FluidBlobParticleData implements ParticleOptions {
 	public static final ParticleOptions.Deserializer<FluidBlobParticleData> DESERIALIZER = new Deserializer<FluidBlobParticleData>() {
 		@Override
 		public FluidBlobParticleData fromNetwork(ParticleType<FluidBlobParticleData> type, FriendlyByteBuf buf) {
-			return new FluidBlobParticleData(buf.readFloat(), buf.readFluidStack());
+			return new FluidBlobParticleData(buf.readFloat(), FluidStack.fromBuffer(buf));
 		}
 		
 		@Override
@@ -55,7 +54,7 @@ public class FluidBlobParticleData implements ParticleOptions {
 	@Override
 	public void writeToNetwork(FriendlyByteBuf buf) {
 		buf.writeFloat(this.scale);
-		buf.writeFluidStack(this.fluid);
+		this.fluid.toBuffer(buf);
 	}
 
 	@Override

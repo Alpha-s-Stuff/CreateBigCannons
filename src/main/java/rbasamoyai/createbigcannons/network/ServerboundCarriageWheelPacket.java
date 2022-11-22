@@ -1,14 +1,16 @@
 package rbasamoyai.createbigcannons.network;
 
 import com.mojang.math.Vector4f;
+import me.pepperbell.simplenetworking.C2SPacket;
+import me.pepperbell.simplenetworking.SimpleChannel;
+import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import rbasamoyai.createbigcannons.cannonmount.carriage.CannonCarriageEntity;
 
-import java.util.function.Supplier;
-
-public class ServerboundCarriageWheelPacket {
+public class ServerboundCarriageWheelPacket implements C2SPacket {
 
     private final Vector4f state;
     private final int id;
@@ -31,12 +33,10 @@ public class ServerboundCarriageWheelPacket {
         .writeFloat(this.state.w());
     }
 
-    public void handle(Supplier<NetworkEvent.Context> sup) {
-        NetworkEvent.Context ctx = sup.get();
-        ctx.enqueueWork(() -> {
-            if (ctx.getSender().level.getEntity(this.id) instanceof CannonCarriageEntity carriage) carriage.setWheelState(this.state);
+    public void handle(MinecraftServer server, ServerPlayer player, ServerGamePacketListenerImpl listener, PacketSender responseSender, SimpleChannel channel) {
+        server.execute(() -> {
+            if (player.level.getEntity(this.id) instanceof CannonCarriageEntity carriage) carriage.setWheelState(this.state);
         });
-        ctx.setPacketHandled(true);
     }
 
 }

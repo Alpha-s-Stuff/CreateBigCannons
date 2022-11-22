@@ -2,7 +2,7 @@
   "replace": false,
   "values": [
     "#minecraft:impermeable",
-    "#forge:glass_panes",
+    "#c:glass_panes",
     "#minecraft:leaves",
     "#minecraft:wool",
     "#minecraft:flower_pots",

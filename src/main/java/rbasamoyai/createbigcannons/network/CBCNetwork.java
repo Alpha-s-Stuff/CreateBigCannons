@@ -21,23 +21,11 @@ public class CBCNetwork {
 		
 		channel.registerS2CPacket(ClientboundUpdateContraptionPacket.class, id++);
 		
-		channel.messageBuilder(ServerboundProximityFuzePacket.class, id++)
-				.encoder(ServerboundProximityFuzePacket::encode)
-				.decoder(ServerboundProximityFuzePacket::new)
-				.consumer(ServerboundProximityFuzePacket::handle)
-				.add();
+		channel.registerC2SPacket(ServerboundProximityFuzePacket.class, id++);
 
-		channel.messageBuilder(ServerboundFiringActionPacket.class, id++)
-				.encoder(ServerboundFiringActionPacket::encode)
-				.decoder(ServerboundFiringActionPacket::new)
-				.consumer(ServerboundFiringActionPacket::handle)
-				.add();
+		channel.registerC2SPacket(ServerboundFiringActionPacket.class, id++);
 
-		channel.messageBuilder(ServerboundCarriageWheelPacket.class, id++)
-				.encoder(ServerboundCarriageWheelPacket::encode)
-				.decoder(ServerboundCarriageWheelPacket::new)
-				.consumer(ServerboundCarriageWheelPacket::handle)
-				.add();
+		channel.registerC2SPacket(ServerboundCarriageWheelPacket.class, id++);
 		
 		return channel;
 	}

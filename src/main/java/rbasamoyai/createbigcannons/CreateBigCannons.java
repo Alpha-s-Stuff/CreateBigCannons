@@ -47,8 +47,8 @@ public class CreateBigCannons implements ModInitializer {
 		CBCMenuTypes.register();
 		CBCFluids.register();
 		CBCRecipeTypes.register();
-		
-		CannonCastShape.CANNON_CAST_SHAPES.register(modEventBus);
+
+		CannonCastShape.CANNON_CAST_SHAPES.register();
 		CBCContraptionTypes.prepare();
 		CBCChecks.register();
 		BlockRecipeSerializer.register();
@@ -68,7 +68,6 @@ public class CreateBigCannons implements ModInitializer {
 		
 		this.registerSerializers();
 
-		DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> CreateBigCannonsClient.prepareClient(modEventBus, forgeEventBus));
 		REGISTRATE.get().register();
 	}
 	

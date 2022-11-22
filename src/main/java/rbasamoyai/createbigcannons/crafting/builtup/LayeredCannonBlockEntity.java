@@ -354,7 +354,7 @@ public class LayeredCannonBlockEntity extends SmartTileEntity implements ICannon
 			if (!layerConnectionTag.contains(dir.getSerializedName())) continue;
 			ListTag connections = layerConnectionTag.getList(dir.getSerializedName(), Tag.TAG_STRING);
 			for (int i = 0; i < connections.size(); ++i) {
-				CannonCastShape shape = CBCRegistries.CANNON_CAST_SHAPES.get().getValue(new ResourceLocation(connections.getString(i)));
+				CannonCastShape shape = CBCRegistries.CANNON_CAST_SHAPES.get().get(new ResourceLocation(connections.getString(i)));
 				if (shape != null) this.layersConnectedTowards.put(dir, shape);
 			}
 		}
@@ -369,7 +369,7 @@ public class LayeredCannonBlockEntity extends SmartTileEntity implements ICannon
 		ListTag layers = tag.getList("Layers", Tag.TAG_COMPOUND);
 		for (int i = 0; i < layers.size(); ++i) {
 			CompoundTag entry = layers.getCompound(i);
-			this.layeredBlocks.put(CBCRegistries.CANNON_CAST_SHAPES.get().getValue(new ResourceLocation(entry.getString("Shape"))), ForgeRegistries.BLOCKS.getValue(new ResourceLocation(entry.getString("Block"))));
+			this.layeredBlocks.put(CBCRegistries.CANNON_CAST_SHAPES.get().get(new ResourceLocation(entry.getString("Shape"))), Registry.BLOCK.get(new ResourceLocation(entry.getString("Block"))));
 		}
 		this.currentFacing = tag.contains("Facing") ? Direction.byName(tag.getString("Facing")) : null;
 		this.completionProgress = tag.getInt("Progress");

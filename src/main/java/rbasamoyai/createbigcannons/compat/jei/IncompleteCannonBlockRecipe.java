@@ -1,14 +1,14 @@
 package rbasamoyai.createbigcannons.compat.jei;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
+import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
-import net.minecraftforge.registries.ForgeRegistries;
 import rbasamoyai.createbigcannons.crafting.incomplete.IncompleteCannonBlock;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public class IncompleteCannonBlockRecipe extends HardcodedBlockRecipe {
 
@@ -25,7 +25,7 @@ public class IncompleteCannonBlockRecipe extends HardcodedBlockRecipe {
 	@Override public List<ItemStack> ingredients() { return this.ingredients; }
 	
 	public static Collection<IncompleteCannonBlockRecipe> makeAllIncompleteRecipes() {
-		return ForgeRegistries.BLOCKS.getValues()
+		return Registry.BLOCK
 		.stream()
 		.filter(IncompleteCannonBlock.class::isInstance)
 		.map(b -> new IncompleteCannonBlockRecipe(null, ((IncompleteCannonBlock) b).getCompleteBlockState(b.defaultBlockState()).getBlock(), b))

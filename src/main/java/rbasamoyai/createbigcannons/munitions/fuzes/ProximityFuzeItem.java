@@ -6,6 +6,7 @@ import java.util.List;
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.utility.Lang;
 
+import io.github.fabricators_of_create.porting_lib.util.NetworkUtil;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -23,7 +24,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.network.NetworkHooks;
 import rbasamoyai.createbigcannons.CBCItems;
 import rbasamoyai.createbigcannons.CreateBigCannons;
 import rbasamoyai.createbigcannons.config.CBCConfigs;
@@ -76,7 +76,7 @@ public class ProximityFuzeItem extends FuzeItem implements MenuProvider {
 				tag.putInt("DetonationDistance", 1);
 			}
 			int dist = tag.getInt("DetonationDistance");
-			NetworkHooks.openGui((ServerPlayer) player, this, buf -> {
+			NetworkUtil.openGui((ServerPlayer) player, this, buf -> {
 				buf.writeVarInt(dist);
 				buf.writeItem(new ItemStack(this));
 			});

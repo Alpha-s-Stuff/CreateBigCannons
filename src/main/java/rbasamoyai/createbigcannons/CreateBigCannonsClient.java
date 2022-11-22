@@ -2,21 +2,19 @@
 package rbasamoyai.createbigcannons;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import io.github.fabricators_of_create.porting_lib.event.client.FogEvents;
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.particle.v1.ParticleFactoryRegistry;
 import net.minecraft.client.Camera;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.particle.ParticleEngine;
+import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
-import net.minecraftforge.client.ClientRegistry;
-import net.minecraftforge.client.event.EntityViewRenderEvent.FogColors;
-import net.minecraftforge.client.event.EntityViewRenderEvent.RenderFogEvent;
-import net.minecraftforge.client.event.ParticleFactoryRegisterEvent;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import rbasamoyai.createbigcannons.cannonmount.CannonPlumeParticle;
 import rbasamoyai.createbigcannons.cannonmount.CannonSmokeParticle;
 import rbasamoyai.createbigcannons.cannonmount.carriage.CannonCarriageEntity;
@@ -28,41 +26,40 @@ import rbasamoyai.createbigcannons.ponder.CBCPonderIndex;
 import java.util.Arrays;
 import java.util.List;
 
-public class CreateBigCannonsClient {
+public class CreateBigCannonsClient implements ClientModInitializer {
 
 	private static final String KEY_ROOT = "key." + CreateBigCannons.MOD_ID;
 	private static final String KEY_CATEGORY = KEY_ROOT + ".category";
 	public static final KeyMapping PITCH_MODE = new KeyMapping(KEY_ROOT + ".pitch_mode", InputConstants.KEY_C, KEY_CATEGORY);
 	public static final KeyMapping FIRE_CONTROLLED_CANNON = new KeyMapping(KEY_ROOT + ".fire_controlled_cannon", InputConstants.KEY_F, KEY_CATEGORY);
 
-	public static void prepareClient(IEventBus modEventBus, IEventBus forgeEventBus) {
+	public static void prepareClient() {
 		CBCBlockPartials.init();
-		modEventBus.addListener(CreateBigCannonsClient::onClientSetup);
-		modEventBus.addListener(CreateBigCannonsClient::onRegisterParticleFactories);
+		CreateBigCannonsClient.onRegisterParticleFactories();
 		
-		forgeEventBus.addListener(CreateBigCannonsClient::getFogColor);
-		forgeEventBus.addListener(CreateBigCannonsClient::getFogDensity);
-		forgeEventBus.addListener(CreateBigCannonsClient::onClientGameTick);
+		FogEvents.SET_COLOR.register(CreateBigCannonsClient::getFogColor);
+		FogEvents.ACTUAL_RENDER_FOG.register(CreateBigCannonsClient::getFogDensity);
+		ClientTickEvents.END_CLIENT_TICK.register(CreateBigCannonsClient::onClientGameTick);
 	}
 	
-	public static void onRegisterParticleFactories(ParticleFactoryRegisterEvent event) {
-		Minecraft mc = Minecraft.getInstance();
-		ParticleEngine engine = mc.particleEngine;
-		
-		engine.register(CBCParticleTypes.CANNON_PLUME.get(), new CannonPlumeParticle.Provider());
-		engine.register(CBCParticleTypes.FLUID_BLOB.get(), new FluidBlobParticle.Provider());
-		engine.register(CBCParticleTypes.CANNON_SMOKE.get(), CannonSmokeParticle.Provider::new);
+	public static void onRegisterParticleFactories() {
+		ParticleFactoryRegistry.getInstance().register(CBCParticleTypes.CANNON_PLUME.get(), new CannonPlumeParticle.Provider());
+		ParticleFactoryRegistry.getInstance().register(CBCParticleTypes.FLUID_BLOB.get(), new FluidBlobParticle.Provider());
+		ParticleFactoryRegistry.getInstance().register(CBCParticleTypes.CANNON_SMOKE.get(), CannonSmokeParticle.Provider::new);
 	}
-	
-	public static void onClientSetup(FMLClientSetupEvent event) {
+
+	@Override
+	public void onInitializeClient() {
 		CBCPonderIndex.register();
 		CBCPonderIndex.registerTags();
 		CBCBlockPartials.resolveDeferredModels();
-		ClientRegistry.registerKeyBinding(PITCH_MODE);
-		ClientRegistry.registerKeyBinding(FIRE_CONTROLLED_CANNON);
+		KeyBindingHelper.registerKeyBinding(PITCH_MODE);
+		KeyBindingHelper.registerKeyBinding(FIRE_CONTROLLED_CANNON);
+
+		prepareClient();
 	}
 	
-	public static void getFogColor(FogColors event) {
+	public static void getFogColor(FogEvents.ColorData event, float partialTicks) {
 		Camera info = event.getCamera();
 		Minecraft mc = Minecraft.getInstance();
 		Level level = mc.level;
@@ -98,15 +95,12 @@ public class CreateBigCannonsClient {
 		}
 	}
 	
-	public static void getFogDensity(RenderFogEvent event) {
-		if (!event.isCancelable()) return;
-		
-		Camera info = event.getCamera();
+	public static boolean getFogDensity(FogRenderer.FogMode type, Camera info, FogEvents.FogData fogData) {
 		Minecraft mc = Minecraft.getInstance();
 		Level level = mc.level;
 		BlockPos blockPos = info.getBlockPosition();
 		FluidState fluidState = level.getFluidState(blockPos);
-		if (info.getPosition().y > blockPos.getY() + fluidState.getHeight(level, blockPos)) return;
+		if (info.getPosition().y > blockPos.getY() + fluidState.getHeight(level, blockPos)) return false;
 
 		Fluid fluid = fluidState.getType();
 		
@@ -118,15 +112,14 @@ public class CreateBigCannonsClient {
 		
 		for (Fluid fluid1 : moltenMetals) {
 			if (fluid1.isSame(fluid)) {
-				event.scaleFarPlaneDistance(1f / 32f);
-				event.setCanceled(true);
-				return;
+				fogData.scaleFarPlaneDistance(1f / 32f);
+				return true;
 			}
 		}
+		return false;
 	}
 
-	public static void onClientGameTick(TickEvent.ClientTickEvent evt) {
-		Minecraft mc = Minecraft.getInstance();
+	public static void onClientGameTick(Minecraft mc) {
 		if (mc.player == null) return;
 		if (mc.player.getVehicle() instanceof CannonCarriageEntity carriage) {
 			net.minecraft.client.player.Input input = mc.player.input;

@@ -138,10 +138,9 @@ public class BuiltUpHeatingRecipe implements BlockRecipe {
 			this.matchingBlocks = new ArrayList<>();
 			if (this.blocks != null) this.matchingBlocks.addAll(this.blocks);
 			else if (this.tag != null) {
-				ForgeRegistries.BLOCKS
-				.tags()
+				Registry.BLOCK
 				.getTag(this.tag)
-				.forEach(this.matchingBlocks::add);
+				.ifPresent(holders -> holders.forEach(blockHolder -> this.matchingBlocks.add(blockHolder.value())));
 			}
 			return this.matchingBlocks;
 		}
