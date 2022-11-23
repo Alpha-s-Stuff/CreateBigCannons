@@ -12,7 +12,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
@@ -39,7 +38,7 @@ public class ImpactFuzeItem extends FuzeItem {
 		ItemDescription.Palette palette = AllSections.of(stack).getTooltipPalette();
 		if (Screen.hasShiftDown()) {
 			String key = this.getDescriptionId() + ".tooltip.chance";
-			tooltip.add(new TextComponent(I18n.get(key)).withStyle(ChatFormatting.GRAY));
+			tooltip.add(Component.literal(I18n.get(key)).withStyle(ChatFormatting.GRAY));
 			tooltip.addAll(TooltipHelper.cutStringTextComponent(I18n.get(key + ".value", (int)(this.getDetonateChance() * 100.0f)), palette.color, palette.hColor, 1));
 		}
 	}

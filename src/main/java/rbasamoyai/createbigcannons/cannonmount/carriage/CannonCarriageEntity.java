@@ -195,7 +195,7 @@ public class CannonCarriageEntity extends Entity implements ControlPitchContrapt
 	private void tickLerp() {
 		if (this.isControlledByLocalInstance()) {
 			this.lerpSteps = 0;
-			this.setPacketCoordinates(this.getX(), this.getY(), this.getZ());
+			this.syncPacketPositionCodec(this.getX(), this.getY(), this.getZ());
 		}
 
 		if (this.lerpSteps > 0) {
@@ -336,7 +336,7 @@ public class CannonCarriageEntity extends Entity implements ControlPitchContrapt
 		this.setHurtTime(10);
 		this.setDamage(this.getDamage() + damage * 10.0f);
 		this.markHurt();
-		this.gameEvent(GameEvent.ENTITY_DAMAGED, source.getEntity());
+		this.gameEvent(GameEvent.ENTITY_DAMAGE, source.getEntity());
 		boolean flag = source.getEntity() instanceof Player player && player.getAbilities().instabuild;
 		if (flag || this.getDamage() > 40.0F) {
 			if (!flag && this.level.getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {

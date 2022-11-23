@@ -21,27 +21,27 @@ description='''Artillery engineering comes to Create'''
 [[dependencies.createbigcannons]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.18.2]"
+    versionRange="[1.19.2]"
     ordering="NONE"
     side="BOTH"
     
 [[dependencies.createbigcannons]]
 	modId="create"
 	mandatory=true
-	versionRange="[0.5.0.e,)"
+	versionRange="[0.5.0.f,)"
 	ordering="NONE"
 	side="BOTH"
 	
 [[dependencies.createbigcannons]]
 	modId="flywheel"
 	mandatory=true
-	versionRange="[0.6.5,0.6.7)"
+	versionRange="[0.6.7,0.6.8)"
 	ordering="NONE"
 	side="BOTH"
 	
 [[dependencies.createbigcannons]]
 	modId="alloyed"
 	mandatory=false
-	versionRange="[1.18.2]"
+	versionRange="[1.19.2]"
 	ordering="NONE"
 	side="BOTH"

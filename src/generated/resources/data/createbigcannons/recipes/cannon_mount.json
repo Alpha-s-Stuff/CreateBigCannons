@@ -1,14 +1,6 @@
 {
   "type": "minecraft:crafting_shaped",
-  "pattern": [
-    "ISI",
-    "SCS",
-    "GSG"
-  ],
   "key": {
-    "S": {
-      "item": "create:shaft"
-    },
     "C": {
       "item": "create:andesite_casing"
     },
@@ -17,8 +9,16 @@
     },
     "I": {
       "item": "create:iron_sheet"
+    },
+    "S": {
+      "item": "create:shaft"
     }
   },
+  "pattern": [
+    "ISI",
+    "SCS",
+    "GSG"
+  ],
   "result": {
     "item": "createbigcannons:cannon_mount"
   }

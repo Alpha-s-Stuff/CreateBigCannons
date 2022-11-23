@@ -1,9 +1,9 @@
 package rbasamoyai.createbigcannons.datagen;
 
 import net.minecraft.data.DataGenerator;
+import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.forge.event.lifecycle.GatherDataEvent;
 import rbasamoyai.createbigcannons.CreateBigCannons;
 import rbasamoyai.createbigcannons.datagen.loot.CBCLootTableProvider;
 import rbasamoyai.createbigcannons.datagen.recipes.BlockRecipeProvider;
@@ -22,11 +22,11 @@ public class CBCDatagen {
 		DataGenerator gen = event.getGenerator();
 		if (event.includeServer()) {
 			BlockRecipeProvider.registerAll(gen);
-			gen.addProvider(new CBCCraftingRecipeProvider(gen));
-			gen.addProvider(new CBCCompactingRecipeProvider(gen));
-			gen.addProvider(new MeltingRecipeProvider(gen));
-			gen.addProvider(new CBCMixingRecipeProvider(gen));
-			gen.addProvider(new CBCLootTableProvider(gen));
+			gen.addProvider(true, new CBCCraftingRecipeProvider(gen));
+			gen.addProvider(true, new CBCCompactingRecipeProvider(gen));
+			gen.addProvider(true, new MeltingRecipeProvider(gen));
+			gen.addProvider(true, new CBCMixingRecipeProvider(gen));
+			gen.addProvider(true, new CBCLootTableProvider(gen));
 		}
 		if (event.includeClient()) {
 			CBCLangGen.prepare();

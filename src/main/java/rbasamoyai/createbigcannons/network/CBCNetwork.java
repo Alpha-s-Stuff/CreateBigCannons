@@ -24,37 +24,37 @@ public class CBCNetwork {
 		channel.messageBuilder(ServerboundTimedFuzePacket.class, id++)
 				.encoder(ServerboundTimedFuzePacket::encode)
 				.decoder(ServerboundTimedFuzePacket::new)
-				.consumer(ServerboundTimedFuzePacket::handle)
+				.consumerMainThread(ServerboundTimedFuzePacket::handle)
 				.add();
 		
 		channel.messageBuilder(ClientboundRecipesPacket.class, id++)
 				.encoder(ClientboundRecipesPacket::encode)
 				.decoder(ClientboundRecipesPacket::new)
-				.consumer(ClientboundRecipesPacket::handle)
+				.consumerMainThread(ClientboundRecipesPacket::handle)
 				.add();
 		
 		channel.messageBuilder(ClientboundUpdateContraptionPacket.class, id++)
 				.encoder(ClientboundUpdateContraptionPacket::encode)
 				.decoder(ClientboundUpdateContraptionPacket::new)
-				.consumer(ClientboundUpdateContraptionPacket::handle)
+				.consumerMainThread(ClientboundUpdateContraptionPacket::handle)
 				.add();
 		
 		channel.messageBuilder(ServerboundProximityFuzePacket.class, id++)
 				.encoder(ServerboundProximityFuzePacket::encode)
 				.decoder(ServerboundProximityFuzePacket::new)
-				.consumer(ServerboundProximityFuzePacket::handle)
+				.consumerMainThread(ServerboundProximityFuzePacket::handle)
 				.add();
 
 		channel.messageBuilder(ServerboundFiringActionPacket.class, id++)
 				.encoder(ServerboundFiringActionPacket::encode)
 				.decoder(ServerboundFiringActionPacket::new)
-				.consumer(ServerboundFiringActionPacket::handle)
+				.consumerMainThread(ServerboundFiringActionPacket::handle)
 				.add();
 
 		channel.messageBuilder(ServerboundCarriageWheelPacket.class, id++)
 				.encoder(ServerboundCarriageWheelPacket::encode)
 				.decoder(ServerboundCarriageWheelPacket::new)
-				.consumer(ServerboundCarriageWheelPacket::handle)
+				.consumerMainThread(ServerboundCarriageWheelPacket::handle)
 				.add();
 		
 		return channel;

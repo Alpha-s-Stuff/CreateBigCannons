@@ -24,7 +24,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.ForgeRegistryEntry;
 import rbasamoyai.createbigcannons.cannons.CannonBlock;
 import rbasamoyai.createbigcannons.cannons.ICannonBlockEntity;
 import rbasamoyai.createbigcannons.crafting.BlockRecipe;
@@ -87,7 +86,7 @@ public class BuiltUpHeatingRecipe implements BlockRecipe {
 	@Override public BlockRecipeSerializer<?> getSerializer() { return BlockRecipeSerializer.BUILT_UP_HEATING.get(); }
 	@Override public BlockRecipeType<?> getType() { return BlockRecipeType.BUILT_UP_HEATING.get(); }
 
-	public static class Serializer extends ForgeRegistryEntry<BlockRecipeSerializer<?>> implements BlockRecipeSerializer<BuiltUpHeatingRecipe> {
+	public static class Serializer implements BlockRecipeSerializer<BuiltUpHeatingRecipe> {
 		@Override
 		public BuiltUpHeatingRecipe fromJson(ResourceLocation id, JsonObject obj) {
 			JsonArray layerArr = obj.getAsJsonArray("layers");

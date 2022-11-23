@@ -1,6 +1,5 @@
 package rbasamoyai.createbigcannons.ponder;
 
-import java.util.Random;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
@@ -30,6 +29,7 @@ import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ComparatorBlock;
@@ -636,7 +636,7 @@ public class CannonCraftingScenes {
 		scene.overlay.showControls(new InputWindowElement(util.vector.topOf(1, 2, 2), Pointing.DOWN).withItem(CBCItems.CAST_IRON_INGOT.asStack()), 10);
 		scene.idle(10);
 		scene.world.modifyBlock(util.grid.at(1, 1, 2), setStateValue(BlazeBurnerBlock.HEAT_LEVEL, HeatLevel.KINDLED), false);
-		Random rand = new Random();
+		RandomSource rand = RandomSource.create();
 		for (int i = 0; i < 20; ++i) {
 			float angle = rand.nextFloat() * 360.0f;
 			Vec3 offset = new Vec3(0, 0, 0.25f);

@@ -1,8 +1,5 @@
 {
   "type": "minecraft:crafting_shaped",
-  "pattern": [
-    "PLP"
-  ],
   "key": {
     "L": {
       "tag": "minecraft:logs"
@@ -11,6 +8,9 @@
       "tag": "minecraft:planks"
     }
   },
+  "pattern": [
+    "PLP"
+  ],
   "result": {
     "item": "createbigcannons:very_large_cast_mould"
   }

@@ -1,21 +1,21 @@
 {
   "type": "minecraft:crafting_shaped",
-  "pattern": [
-    "I",
-    "C",
-    "R"
-  ],
   "key": {
-    "I": {
-      "item": "minecraft:iron_ingot"
-    },
     "C": {
       "item": "minecraft:clock"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
     },
     "R": {
       "item": "minecraft:redstone"
     }
   },
+  "pattern": [
+    "I",
+    "C",
+    "R"
+  ],
   "result": {
     "item": "createbigcannons:timed_fuze"
   }

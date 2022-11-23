@@ -1,24 +1,24 @@
 {
   "type": "create:mechanical_crafting",
+  "acceptMirrored": true,
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "S": {
+      "tag": "minecraft:wooden_slabs"
+    },
+    "T": {
+      "item": "minecraft:tnt"
+    }
+  },
   "pattern": [
     " I ",
     "ITI",
     "ITI",
     " S "
   ],
-  "key": {
-    "I": {
-      "item": "minecraft:iron_ingot"
-    },
-    "T": {
-      "item": "minecraft:tnt"
-    },
-    "S": {
-      "tag": "minecraft:wooden_slabs"
-    }
-  },
   "result": {
     "item": "createbigcannons:he_shell"
-  },
-  "acceptMirrored": true
+  }
 }

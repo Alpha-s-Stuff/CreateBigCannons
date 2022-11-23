@@ -33,7 +33,7 @@ public enum CBCRecipeTypes implements IRecipeTypeInfo {
 		String name = Lang.asId(this.name());
 		this.id = CreateBigCannons.resource(name);
 		this.serializer = Registries.SERIALIZERS.register(name, serializer);
-		this.typeObj = Registries.RECIPE_TYPES.register(name, () -> AllRecipeTypes.simpleType(this.id));
+		this.typeObj = Registries.RECIPE_TYPES.register(name, () -> RecipeType.simple(this.id));
 		this.type = this.typeObj;
 	}
 	

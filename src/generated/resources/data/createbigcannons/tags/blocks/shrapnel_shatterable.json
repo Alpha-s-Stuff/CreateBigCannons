@@ -1,5 +1,4 @@
 {
-  "replace": false,
   "values": [
     "#minecraft:impermeable",
     "#forge:glass_panes",

@@ -7,15 +7,13 @@ import com.tterrag.registrate.util.entry.RegistryEntry;
 import com.tterrag.registrate.util.nullness.NonNullSupplier;
 import com.tterrag.registrate.util.nullness.NonnullType;
 
-import net.minecraftforge.registries.ForgeRegistryEntry;
-import net.minecraftforge.registries.IForgeRegistryEntry;
 import net.minecraftforge.registries.RegistryObject;
 import rbasamoyai.createbigcannons.CreateBigCannons;
 import rbasamoyai.createbigcannons.base.CBCRegistries;
 import rbasamoyai.createbigcannons.crafting.builtup.BuiltUpHeatingRecipe;
 import rbasamoyai.createbigcannons.crafting.casting.CannonCastingRecipe;
 
-public interface BlockRecipeType<T extends BlockRecipe> extends IForgeRegistryEntry<BlockRecipeType<?>> {
+public interface BlockRecipeType<T extends BlockRecipe> {
 	
 	public static final Entry<CannonCastingRecipe> CANNON_CASTING = register("cannon_casting");
 	public static final Entry<BuiltUpHeatingRecipe> BUILT_UP_HEATING = register("built_up_heating");
@@ -25,7 +23,7 @@ public interface BlockRecipeType<T extends BlockRecipe> extends IForgeRegistryEn
 		return reg.entry(id, cb -> new Builder<>(reg, reg, id, cb, () -> new Simple<T>(id))).register();
 	}
 	
-	public static class Simple<T extends BlockRecipe> extends ForgeRegistryEntry<BlockRecipeType<?>> implements BlockRecipeType<T> {
+	public static class Simple<T extends BlockRecipe> implements BlockRecipeType<T> {
 		private final String id;
 		
 		public Simple(String id) {

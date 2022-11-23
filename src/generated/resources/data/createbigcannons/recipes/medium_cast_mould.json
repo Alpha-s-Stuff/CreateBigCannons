@@ -1,8 +1,5 @@
 {
   "type": "minecraft:crafting_shaped",
-  "pattern": [
-    "SLS"
-  ],
   "key": {
     "L": {
       "tag": "minecraft:logs"
@@ -11,6 +8,9 @@
       "item": "minecraft:stick"
     }
   },
+  "pattern": [
+    "SLS"
+  ],
   "result": {
     "item": "createbigcannons:medium_cast_mould"
   }

@@ -6,11 +6,10 @@ import java.util.Map;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
-import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.event.RegistryEvent.MissingMappings.Mapping;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.MissingMappingsEvent;
 import rbasamoyai.createbigcannons.CBCBlocks;
 import rbasamoyai.createbigcannons.CBCItems;
 import rbasamoyai.createbigcannons.CreateBigCannons;
@@ -29,39 +28,39 @@ public class CBCRemapper {
 	}
 	
 	@SubscribeEvent
-	public static void onRemapItem(RegistryEvent.MissingMappings<Item> event) {
-		for (Mapping<Item> mapping : event.getMappings(CreateBigCannons.MOD_ID)) {
-			ResourceLocation key = mapping.key;
-			String path = key.getPath();
-			ResourceLocation remapLoc = REMAP.get(path);
-			if (remapLoc == null) continue;
-			Item remapped = ForgeRegistries.ITEMS.getValue(remapLoc);
-			if (remapped == null) continue;
-			CreateBigCannons.LOGGER.warn("Remapping item '{}' to '{}'", key, remapLoc);
-			try {
-				mapping.remap(remapped);
-			} catch (Throwable t) {
-				CreateBigCannons.LOGGER.warn("Remapping item '{}' to '{}' failed: {}", key, remapLoc, t);
+	public static void onRemap(MissingMappingsEvent event) {
+		if (event.getRegistry() == ForgeRegistries.ITEMS) {
+			for (MissingMappingsEvent.Mapping mapping : event.getMappings(ForgeRegistries.ITEMS.getRegistryKey(), CreateBigCannons.MOD_ID)) {
+				ResourceLocation key = mapping.getKey();
+				String path = key.getPath();
+				ResourceLocation remapLoc = REMAP.get(path);
+				if (remapLoc == null) continue;
+				Item remapped = ForgeRegistries.ITEMS.getValue(remapLoc);
+				if (remapped == null) continue;
+				CreateBigCannons.LOGGER.warn("Remapping item '{}' to '{}'", key, remapLoc);
+				try {
+					mapping.remap(remapped);
+				} catch (Throwable t) {
+					CreateBigCannons.LOGGER.warn("Remapping item '{}' to '{}' failed: {}", key, remapLoc, t);
+				}
+			}
+		}
+
+		if (event.getRegistry() == ForgeRegistries.BLOCKS) {
+			for (MissingMappingsEvent.Mapping<Block> mapping : event.getMappings(ForgeRegistries.BLOCKS.getRegistryKey(), CreateBigCannons.MOD_ID)) {
+				ResourceLocation key = mapping.getKey();
+				String path = key.getPath();
+				ResourceLocation remapLoc = REMAP.get(path);
+				if (remapLoc == null) continue;
+				Block remapped = ForgeRegistries.BLOCKS.getValue(remapLoc);
+				if (remapped == null) continue;
+				CreateBigCannons.LOGGER.warn("Remapping block '{}' to '{}'", key, remapLoc);
+				try {
+					mapping.remap(remapped);
+				} catch (Throwable t) {
+					CreateBigCannons.LOGGER.warn("Remapping block '{}' to '{}' failed: {}", key, remapLoc, t);
+				}
 			}
 		}
 	}
-	
-	@SubscribeEvent
-	public static void onRemapBlock(RegistryEvent.MissingMappings<Block> event) {
-		for (Mapping<Block> mapping : event.getMappings(CreateBigCannons.MOD_ID)) {
-			ResourceLocation key = mapping.key;
-			String path = key.getPath();
-			ResourceLocation remapLoc = REMAP.get(path);
-			if (remapLoc == null) continue;
-			Block remapped = ForgeRegistries.BLOCKS.getValue(remapLoc);
-			if (remapped == null) continue;
-			CreateBigCannons.LOGGER.warn("Remapping block '{}' to '{}'", key, remapLoc);
-			try {
-				mapping.remap(remapped);
-			} catch (Throwable t) {
-				CreateBigCannons.LOGGER.warn("Remapping block '{}' to '{}' failed: {}", key, remapLoc, t);
-			}
-		}
-	}
-	
 }

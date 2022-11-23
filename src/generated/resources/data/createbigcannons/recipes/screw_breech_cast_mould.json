@@ -1,9 +1,5 @@
 {
   "type": "minecraft:crafting_shaped",
-  "pattern": [
-    "S",
-    "s"
-  ],
   "key": {
     "S": {
       "tag": "minecraft:wooden_slabs"
@@ -12,6 +8,10 @@
       "item": "minecraft:stick"
     }
   },
+  "pattern": [
+    "S",
+    "s"
+  ],
   "result": {
     "item": "createbigcannons:screw_breech_cast_mould"
   }

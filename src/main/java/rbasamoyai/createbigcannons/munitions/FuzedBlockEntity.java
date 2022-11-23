@@ -17,8 +17,8 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
 import rbasamoyai.createbigcannons.CreateBigCannons;
@@ -35,7 +35,7 @@ public class FuzedBlockEntity extends SyncedTileEntity implements IHaveGoggleInf
 	
 	@Override
 	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side) {
-		if (cap == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY && side == this.getBlockState().getValue(BlockStateProperties.FACING)) {
+		if (cap == ForgeCapabilities.ITEM_HANDLER && side == this.getBlockState().getValue(BlockStateProperties.FACING)) {
 			if (this.fuzeOptional == null) {
 				this.fuzeOptional = LazyOptional.of(this::createHandler);
 			}

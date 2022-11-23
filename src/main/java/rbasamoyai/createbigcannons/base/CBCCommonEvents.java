@@ -10,7 +10,7 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraftforge.event.world.BlockEvent.BreakEvent;
+import net.minecraftforge.event.level.BlockEvent.BreakEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import rbasamoyai.createbigcannons.CBCBlocks;
 import rbasamoyai.createbigcannons.crafting.boring.CannonDrillBlock;
@@ -23,7 +23,7 @@ public class CBCCommonEvents {
 
 	public static void onPlayerBreakBlock(BreakEvent event) {
 		BlockState state = event.getState();
-		LevelAccessor level = event.getWorld();
+		LevelAccessor level = event.getLevel();
 		BlockPos pos = event.getPos();
 		if (AllBlocks.PISTON_EXTENSION_POLE.has(state)) {
 			BlockPos drillPos = destroyPoleContraption(CBCBlocks.CANNON_DRILL_BIT.get(), CBCBlocks.CANNON_DRILL.get(), CannonDrillBlock.maxAllowedDrillLength(), event);
@@ -46,7 +46,7 @@ public class CBCCommonEvents {
 	}
 	
 	private static BlockPos destroyPoleContraption(Block head, Block base, int limit, BreakEvent event) {
-		LevelAccessor level = event.getWorld();
+		LevelAccessor level = event.getLevel();
 		BlockPos pos = event.getPos();
 		Direction.Axis axis = event.getState().getValue(BlockStateProperties.FACING).getAxis();
 		Direction positive = Direction.fromAxisAndDirection(axis, Direction.AxisDirection.POSITIVE);
