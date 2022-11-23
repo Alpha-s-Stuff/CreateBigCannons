@@ -13,13 +13,14 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
@@ -211,7 +212,7 @@ public class MountedCannonContraption extends Contraption {
 		float smokeScale = 0;
 		int barrelTravelled = 0;
 		BlockPos currentPos = BlockPos.ZERO;
-		Random rand = level.getRandom();
+		RandomSource rand = level.getRandom();
 		
 		boolean failed = false;
 		boolean canFail = !CBCConfigs.SERVER.failure.disableAllFailure.get();
@@ -350,22 +351,22 @@ public class MountedCannonContraption extends Contraption {
 		iter.set(new CannonBlockEntityHolder<>(cbeh.blockEntity, consumedInfo));
 	}
 	
-	private static boolean rollSquib(Random random) {
+	private static boolean rollSquib(RandomSource random) {
 		float f = CBCConfigs.SERVER.failure.squibChance.getF();
 		return f != 0 && random.nextFloat() <= f;
 	}
 	
-	private static boolean rollBarrelBurst(Random random) {
+	private static boolean rollBarrelBurst(RandomSource random) {
 		float f = CBCConfigs.SERVER.failure.barrelChargeBurstChance.getF();
 		return f != 0 && random.nextFloat() <= f;
 	}
 	
-	private static boolean rollOverloadBurst(Random random) {
+	private static boolean rollOverloadBurst(RandomSource random) {
 		float f = CBCConfigs.SERVER.failure.overloadBurstChance.getF();
 		return f != 0 && random.nextFloat() <= f;
 	}
 	
-	private static boolean rollFailToIgnite(Random random) {
+	private static boolean rollFailToIgnite(RandomSource random) {
 		float f = CBCConfigs.SERVER.failure.interruptedIgnitionChance.getF();
 		return f != 0 && random.nextFloat() <= f;
 	}
@@ -444,19 +445,19 @@ public class MountedCannonContraption extends Contraption {
 	@Override protected ContraptionType getType() { return CBCContraptionTypes.MOUNTED_CANNON; }
 	
 	public static AssemblyException cannonTooLarge() {
-		return new AssemblyException(new TranslatableComponent("exception." + CreateBigCannons.MOD_ID + ".cannon_mount.cannonTooLarge", getMaxCannonLength()));
+		return new AssemblyException(Component.translatable("exception." + CreateBigCannons.MOD_ID + ".cannon_mount.cannonTooLarge", getMaxCannonLength()));
 	}
 	
 	public static AssemblyException invalidCannon() {
-		return new AssemblyException(new TranslatableComponent("exception." + CreateBigCannons.MOD_ID + ".cannon_mount.invalidCannon"));
+		return new AssemblyException(Component.translatable("exception." + CreateBigCannons.MOD_ID + ".cannon_mount.invalidCannon"));
 	}
 	
 	public static AssemblyException cannonLoaderInsideDuringAssembly(BlockPos pos) {
-		return new AssemblyException(new TranslatableComponent("exception." + CreateBigCannons.MOD_ID + ".cannon_mount.cannonLoaderInsideDuringAssembly", pos.getX(), pos.getY(), pos.getZ()));
+		return new AssemblyException(Component.translatable("exception." + CreateBigCannons.MOD_ID + ".cannon_mount.cannonLoaderInsideDuringAssembly", pos.getX(), pos.getY(), pos.getZ()));
 	}
 	
 	public static AssemblyException hasIncompleteCannonBlocks(BlockPos pos) {
-		return new AssemblyException(new TranslatableComponent("exception." + CreateBigCannons.MOD_ID + ".cannon_mount.hasIncompleteCannonBlocks", pos.getX(), pos.getY(), pos.getZ()));
+		return new AssemblyException(Component.translatable("exception." + CreateBigCannons.MOD_ID + ".cannon_mount.hasIncompleteCannonBlocks", pos.getX(), pos.getY(), pos.getZ()));
 	}
 	
 	protected static class CannonBlockEntityHolder<T extends BlockEntity & ICannonBlockEntity> {

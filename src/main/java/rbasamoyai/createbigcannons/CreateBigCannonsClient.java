@@ -2,11 +2,16 @@
 package rbasamoyai.createbigcannons;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.shaders.FogShape;
 import io.github.fabricators_of_create.porting_lib.event.client.FogEvents;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.particle.v1.ParticleFactoryRegistry;
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandler;
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry;
+import net.fabricmc.fabric.api.client.render.fluid.v1.SimpleFluidRenderHandler;
+import net.fabricmc.fabric.api.transfer.v1.client.fluid.FluidVariantRendering;
 import net.minecraft.client.Camera;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -15,6 +20,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.material.FogType;
 import rbasamoyai.createbigcannons.cannonmount.CannonPlumeParticle;
 import rbasamoyai.createbigcannons.cannonmount.CannonSmokeParticle;
 import rbasamoyai.createbigcannons.cannonmount.carriage.CannonCarriageEntity;
@@ -38,7 +44,7 @@ public class CreateBigCannonsClient implements ClientModInitializer {
 		CreateBigCannonsClient.onRegisterParticleFactories();
 		
 		FogEvents.SET_COLOR.register(CreateBigCannonsClient::getFogColor);
-		FogEvents.ACTUAL_RENDER_FOG.register(CreateBigCannonsClient::getFogDensity);
+		FogEvents.RENDER_FOG.register(CreateBigCannonsClient::getFogDensity);
 		ClientTickEvents.END_CLIENT_TICK.register(CreateBigCannonsClient::onClientGameTick);
 	}
 	
@@ -57,6 +63,15 @@ public class CreateBigCannonsClient implements ClientModInitializer {
 		KeyBindingHelper.registerKeyBinding(FIRE_CONTROLLED_CANNON);
 
 		prepareClient();
+
+		FluidRenderHandlerRegistry.INSTANCE.register(CBCFluids.MOLTEN_CAST_IRON.get(), CBCFluids.MOLTEN_CAST_IRON.get().getSource(), createHandler("molten_cast_iron"));
+		FluidRenderHandlerRegistry.INSTANCE.register(CBCFluids.MOLTEN_BRONZE.get(), CBCFluids.MOLTEN_BRONZE.get().getSource(), createHandler("molten_bronze"));
+		FluidRenderHandlerRegistry.INSTANCE.register(CBCFluids.MOLTEN_STEEL.get(), CBCFluids.MOLTEN_STEEL.get().getSource(), createHandler("molten_steel"));
+		FluidRenderHandlerRegistry.INSTANCE.register(CBCFluids.MOLTEN_NETHERSTEEL.get(), CBCFluids.MOLTEN_NETHERSTEEL.get().getSource(), createHandler("molten_nethersteel"));
+	}
+
+	private FluidRenderHandler createHandler(String name) {
+		return new SimpleFluidRenderHandler(CreateBigCannons.resource("fluid/" + name + "_still"), CreateBigCannons.resource("fluid/" + name + "_flow"), CreateBigCannons.resource("fluid/" + name + "_flow"), 0x00ffffff);
 	}
 	
 	public static void getFogColor(FogEvents.ColorData event, float partialTicks) {
@@ -95,7 +110,7 @@ public class CreateBigCannonsClient implements ClientModInitializer {
 		}
 	}
 	
-	public static boolean getFogDensity(FogRenderer.FogMode type, Camera info, FogEvents.FogData fogData) {
+	public static boolean getFogDensity(FogRenderer.FogMode mode, FogType type, Camera info, float partialTick, float renderDistance, float nearDistance, float farDistance, FogShape shape, FogEvents.FogData fogData) {
 		Minecraft mc = Minecraft.getInstance();
 		Level level = mc.level;
 		BlockPos blockPos = info.getBlockPosition();

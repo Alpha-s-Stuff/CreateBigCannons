@@ -18,6 +18,7 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
 import rbasamoyai.createbigcannons.CBCBlockPartials;
 
@@ -68,7 +69,7 @@ public class CannonCastBlockEntityRenderer extends SafeTileEntityRenderer<Cannon
 					BlockState state1 = te.resultPreview.get(l);
 					VertexConsumer vCons = buffer.getBuffer(Sheets.translucentItemSheet());
 					BakedModel model = this.dispatcher.getBlockModel(state1);
-					Random rand = new Random();
+					RandomSource rand = RandomSource.create();
 					ms.pushPose();
 					ms.translate(0, l, 0);
 					

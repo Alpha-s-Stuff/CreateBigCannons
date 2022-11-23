@@ -51,8 +51,7 @@ public interface BlockRecipeType<T extends BlockRecipe> {
 		
 		@Override public Entry<T> register() { return (Entry<T>) super.register(); }
 		@Override protected Entry<T> createEntryWrapper(RegistryObject<BlockRecipeType<T>> delegate) {
-			Registry.register(CBCRegistries.BLOCK_RECIPE_TYPES.get(), delegate.getId(), createEntry());
-			return new Entry<>(this.getOwner(), RegistryObject.of(delegate.getId(), CBCRegistries.BLOCK_RECIPE_TYPES.get()));
+			return new Entry<>(this.getOwner(), delegate);
 		}
 	}
 	

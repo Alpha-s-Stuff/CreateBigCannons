@@ -11,6 +11,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
+import net.minecraft.data.CachedOutput;
 import org.slf4j.Logger;
 
 import com.google.gson.Gson;
@@ -39,13 +41,13 @@ public abstract class BlockRecipeProvider implements DataProvider {
 	
 	protected static final List<BlockRecipeProvider> GENERATORS = new ArrayList<>();
 	
-	public static void registerAll(DataGenerator gen) {
+	public static void registerAll(FabricDataGenerator gen) {
 		GENERATORS.add(new CannonCastRecipeProvider(gen));
 		GENERATORS.add(new BuiltUpHeatingRecipeProvider(gen));
 		
-		gen.addProvider(new DataProvider() {	
+		gen.addProvider(new DataProvider() {
 			@Override
-			public void run(HashCache cache) throws IOException {
+			public void run(CachedOutput cache) throws IOException {
 				GENERATORS.forEach(gen -> {
 					try {
 						gen.run(cache);
@@ -63,7 +65,7 @@ public abstract class BlockRecipeProvider implements DataProvider {
 	}
 	
 	@Override
-	public void run(HashCache cache) throws IOException {
+	public void run(CachedOutput cache) throws IOException {
 		Path path = this.gen.getOutputFolder();
 		Set<ResourceLocation> set = new HashSet<>();
 		this.registerRecipes(recipe -> {
@@ -75,33 +77,9 @@ public abstract class BlockRecipeProvider implements DataProvider {
 		});
 	}
 	
-	private static void saveRecipe(HashCache cache, JsonObject obj, Path path) {
+	private static void saveRecipe(CachedOutput cache, JsonObject obj, Path path) {
 		try {
-			String s = GSON.toJson(obj);
-			String s1 = SHA1.hashUnencodedChars(s).toString();
-			if (!Objects.equals(cache.getHash(path), s1) || !Files.exists(path)) {
-				Files.createDirectories(path.getParent());
-				BufferedWriter writer = Files.newBufferedWriter(path);
-				
-				try {
-					writer.write(s);
-				} catch (Throwable throwable) {
-					if (writer != null) {
-						try {
-							writer.close();
-						} catch (Throwable throwable1) {
-							throwable.addSuppressed(throwable1);
-						}
-					}
-					throw throwable;
-				}
-				
-				if (writer != null) {
-					writer.close();
-				}
-			}
-			
-			cache.putNew(path, s1);
+			DataProvider.saveStable(cache, obj, path);
 		} catch (IOException e) {
 			LOGGER.error("Couldn't save casting recipe {}", path, e);
 		}

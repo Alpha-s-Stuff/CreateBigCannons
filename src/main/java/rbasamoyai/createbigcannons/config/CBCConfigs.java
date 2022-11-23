@@ -6,7 +6,7 @@ import java.util.Map.Entry;
 import java.util.function.Supplier;
 
 import net.minecraftforge.api.ModLoadingContext;
-import net.minecraftforge.api.fml.event.config.ModConfigEvent;
+import net.minecraftforge.api.fml.event.config.ModConfigEvents;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.simibubi.create.foundation.block.BlockStressValues;
@@ -53,8 +53,8 @@ public class CBCConfigs {
 
 		BlockStressValues.registerProvider(CreateBigCannons.MOD_ID, SERVER.kinetics.stress);
 
-		ModConfigEvent.LOADING.register(CBCConfigs::onLoad);
-		ModConfigEvent.RELOADING.register(CBCConfigs::onReload);
+		ModConfigEvents.loading(CreateBigCannons.MOD_ID).register(CBCConfigs::onLoad);
+		ModConfigEvents.reloading(CreateBigCannons.MOD_ID).register(CBCConfigs::onReload);
 	}
 
 	public static void onLoad(ModConfig modConfig) {

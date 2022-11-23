@@ -5,87 +5,87 @@ import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.tterrag.registrate.builders.FluidBuilder;
 import com.tterrag.registrate.fabric.SimpleFlowableFluid;
 import com.tterrag.registrate.util.entry.FluidEntry;
-import com.tterrag.registrate.util.nullness.NonNullBiFunction;
-
-import io.github.fabricators_of_create.porting_lib.util.FluidAttributes;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.BlockAndTintGetter;
-import net.minecraft.world.level.material.Fluid;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributeHandler;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributes;
+import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.Nullable;
 
 public class CBCFluids {
 
 	public static final FluidEntry<SimpleFlowableFluid.Flowing> MOLTEN_CAST_IRON =
-			standardFluid("molten_cast_iron", NoColorFluidAttributes::new)
+			standardFluid("molten_cast_iron")
 			.lang(f -> "fluid.createbigcannons.molten_cast_iron", "Molten Cast Iron")
 			.tag(AllTags.forgeFluidTag("molten_cast_iron"))
 //			.attributes(b -> b.viscosity(1250)
 //					.density(7100)
 //					.temperature(1200))
-			.properties(p -> p.levelDecreasePerBlock(2)
+			.fluidProperties(p -> p.levelDecreasePerBlock(2)
 					.tickRate(25)
 					.levelDecreasePerBlock(3)
 					.blastResistance(100f))
-			.source(SimpleFlowableFluid.Still::new)
+			.source(SimpleFlowableFluid.Source::new)
 			.register();
 	
 	public static final FluidEntry<SimpleFlowableFluid.Flowing> MOLTEN_BRONZE =
-			standardFluid("molten_bronze", NoColorFluidAttributes::new)
+			standardFluid("molten_bronze")
 			.lang(f -> "fluid.createbigcannons.molten_bronze", "Molten Bronze")
 			.tag(AllTags.forgeFluidTag("molten_bronze"))
 //			.attributes(b -> b.viscosity(1250)
 //					.density(8770)
 //					.temperature(920))
-			.properties(p -> p.levelDecreasePerBlock(2)
+			.fluidProperties(p -> p.levelDecreasePerBlock(2)
 					.tickRate(25)
 					.levelDecreasePerBlock(3)
 					.blastResistance(100f))
-			.source(SimpleFlowableFluid.Still::new)
+			.source(SimpleFlowableFluid.Source::new)
 			.register();
 	
 	public static final FluidEntry<SimpleFlowableFluid.Flowing> MOLTEN_STEEL =
-			standardFluid("molten_steel", NoColorFluidAttributes::new)
+			standardFluid("molten_steel")
 			.lang(f -> "fluid.createbigcannons.molten_steel", "Molten Steel")
 			.tag(AllTags.forgeFluidTag("molten_steel"))
 //			.attributes(b -> b.viscosity(1250)
 //					.density(7040)
 //					.temperature(1430))
-			.properties(p -> p.levelDecreasePerBlock(2)
+			.fluidProperties(p -> p.levelDecreasePerBlock(2)
 					.tickRate(25)
 					.levelDecreasePerBlock(3)
 					.blastResistance(100f))
-			.source(SimpleFlowableFluid.Still::new)
+			.source(SimpleFlowableFluid.Source::new)
 			.register();
 	
 	public static final FluidEntry<SimpleFlowableFluid.Flowing> MOLTEN_NETHERSTEEL =
-			standardFluid("molten_nethersteel", NoColorFluidAttributes::new)
+			standardFluid("molten_nethersteel")
 			.lang(f -> "fluid.createbigcannons.molten_nethersteel", "Molten Nethersteel")
 //			.attributes(b -> b.viscosity(1250)
 //					.density(7040)
 //					.temperature(1430))
-			.properties(p -> p.levelDecreasePerBlock(2)
+			.fluidProperties(p -> p.levelDecreasePerBlock(2)
 					.tickRate(25)
 					.levelDecreasePerBlock(3)
 					.blastResistance(100f))
-			.source(SimpleFlowableFluid.Still::new)
+			.source(SimpleFlowableFluid.Source::new)
 			.register();
 	
-	private static FluidBuilder<SimpleFlowableFluid.Flowing, CreateRegistrate> standardFluid(String name, NonNullBiFunction<FluidAttributes.Builder, Fluid, FluidAttributes> factory) {
+	private static FluidBuilder<SimpleFlowableFluid.Flowing, CreateRegistrate> standardFluid(String name) {
 		return CreateBigCannons.registrate()
 				.fluid(name, CreateBigCannons.resource("fluid/" + name + "_still"), CreateBigCannons.resource("fluid/" + name + "_flow")/*, factory*/);
 	}
 	
-	public static void register() {}
-	
-	private static class NoColorFluidAttributes extends FluidAttributes {
+	public static void register() {
+		FluidVariantAttributes.register(MOLTEN_BRONZE.get(), new FluidVariantAttributeHandler() {
 
-		protected NoColorFluidAttributes(Builder builder, Fluid fluid) {
-			super(builder, fluid);
-		}
-		
-		@Override
-		public int getColor(BlockAndTintGetter level, BlockPos pos) {
-			return 0x00ffffff;
-		}		
+			@Override
+			public int getTemperature(FluidVariant variant) {
+				return 920;
+			}
+
+			@Override
+			public int getViscosity(FluidVariant variant, @Nullable Level world) {
+				return 1250;
+			}
+		});
 	}
 	
 }

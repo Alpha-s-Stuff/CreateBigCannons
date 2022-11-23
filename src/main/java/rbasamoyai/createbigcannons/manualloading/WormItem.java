@@ -17,7 +17,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
@@ -114,11 +113,11 @@ public class WormItem extends Item {
 			String keyBase = this.getDescriptionId() + ".tooltip.";
 			
 			String key = keyBase + "reach";
-			tooltip.add(new TextComponent(I18n.get(key)).withStyle(ChatFormatting.GRAY));
+			tooltip.add(Component.literal(I18n.get(key)).withStyle(ChatFormatting.GRAY));
 			tooltip.addAll(TooltipHelper.cutStringTextComponent(I18n.get(key + ".value", getReach()), palette.color, palette.hColor, 1));
 			
 			String key1 = keyBase + "deployerCanUse";
-			tooltip.add(new TextComponent(I18n.get(key1)).withStyle(ChatFormatting.GRAY));
+			tooltip.add(Component.literal(I18n.get(key1)).withStyle(ChatFormatting.GRAY));
 			tooltip.addAll(TooltipHelper.cutStringTextComponent(I18n.get(key1 + (deployersCanUse() ? ".yes" : ".no")), palette.color, palette.hColor, 1));
 		}
 	}

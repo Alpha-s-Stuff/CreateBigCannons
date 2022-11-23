@@ -27,6 +27,7 @@ import io.github.fabricators_of_create.porting_lib.util.FluidStack;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -37,7 +38,6 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -71,7 +71,7 @@ import rbasamoyai.createbigcannons.crafting.casting.CannonCastShape;
 import rbasamoyai.createbigcannons.network.CBCNetwork;
 import rbasamoyai.createbigcannons.network.ClientboundUpdateContraptionPacket;
 
-public class CannonDrillBlockEntity extends PoleMoverBlockEntity implements FluidTransferable {
+public class CannonDrillBlockEntity extends PoleMoverBlockEntity implements SidedStorageBlockEntity {
 
 	protected AbstractContraptionEntity latheEntity;
 	protected BlockPos boringPos;
@@ -500,10 +500,10 @@ public class CannonDrillBlockEntity extends PoleMoverBlockEntity implements Flui
 	@Override
 	public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
 		super.addToGoggleTooltip(tooltip, isPlayerSneaking);
-		tooltip.add(TextComponent.EMPTY);
+		tooltip.add(Component.empty());
 		this.containedFluidTooltip(tooltip, isPlayerSneaking, this.lubricant);
 		if (this.failureReason != FailureReason.NONE) {
-			tooltip.add(TextComponent.EMPTY);
+			tooltip.add(Component.empty());
 			Lang.builder("exception")
 				.translate(CreateBigCannons.MOD_ID + ".cannon_drill.tooltip.encounteredProblem")
 				.style(ChatFormatting.GOLD)
